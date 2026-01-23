@@ -1,40 +1,38 @@
+{{- range .Values.instances }}
 ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "ros2k8s.fullname" . }}-ros
+  name: {{ $.Release.Name }}-{{ .name }}
   labels:
-    app.kubernetes.io/name: {{ include "ros2k8s.fullname" . }}
-    app.kubernetes.io/component: ros
+    app: {{ $.Release.Name }}-{{ .name }}
 spec:
-  replicas: {{ .Values.ros.replicas }}
+  replicas: {{ default $.Values.defaults.replicas .replicas }}
   selector:
     matchLabels:
-      app.kubernetes.io/name: {{ include "ros2k8s.fullname" . }}
-      app.kubernetes.io/component: ros
+      app: {{ $.Release.Name }}-{{ .name }}
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: {{ include "ros2k8s.fullname" . }}
-        app.kubernetes.io/component: ros
+        app: {{ $.Release.Name }}-{{ .name }}
     spec:
       securityContext:
         seccompProfile:
           type: RuntimeDefault
       containers:
         - name: ros
-          image: {{ .Values.ros.image | quote }}
+          image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) .image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) .image).tag }}"
           imagePullPolicy: IfNotPresent
           args:
-  {{- toYaml .Values.ros.args | nindent 12 }}
+            {{- toYaml (default $.Values.defaults.args .args) | nindent 12 }}
           env:
             # Point ROS 2 nodes at the in-cluster Discovery Server service.
             # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
             - name: ROS_DISCOVERY_SERVER
-              value: "{{ include "ros2k8s.fullname" . }}-discovery-server:11811"
+              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) .discoveryServerAddress | quote }}
 
             - name: ROS_DOMAIN_ID
-              value: {{ .Values.ros.env.ROS_DOMAIN_ID | quote }}
+              value: {{ default "0" .domainId | quote }}
 
             # Ensure pods can communicate over the network
             - name: ROS_LOCALHOST_ONLY
@@ -55,4 +53,5 @@ spec:
             capabilities:
               drop: [ "ALL" ]
           resources:
-  {{- toYaml .Values.ros.resources | nindent 12 }}
+            {{- toYaml (default $.Values.defaults.resources .resources) | nindent 12 }}
+{{- end }}

@@ -33,4 +33,4 @@ EXPOSE 11811/udp
 
 # Foreground server process (Kubernetes-friendly)
 ENTRYPOINT ["/usr/bin/tini", "--"]
-CMD ["bash", "-lc", "source /opt/ros/${ROS_DISTRO}/setup.bash && exec fastdds discovery"]
+CMD ["bash", "-lc", "source /opt/ros/${ROS_DISTRO}/setup.bash && exec fastdds discovery -i 0"]
