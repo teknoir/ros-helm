@@ -1,0 +1,16 @@
+---
+apiVersion: helm.cattle.io/v1
+kind: HelmChart
+metadata:
+  name: ros
+  namespace: demonstrations
+spec:
+  repo: https://teknoir.github.io/ros-helm
+  chart: ros
+  version: 0.0.0-alpha.1
+  targetNamespace: demonstrations
+  valuesContent: |-
+    discoveryServer:
+      image: us-docker.pkg.dev/teknoir/gcr.io/dds-discovery:jazzy-20260123-192333
+    ros:
+      image: us-docker.pkg.dev/teknoir/gcr.io/ros:jazzy-20260123-192333

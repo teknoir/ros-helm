@@ -1,0 +1,1 @@
+1. ROS is installed in the namespace: {{ .Release.Namespace }}

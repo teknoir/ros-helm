@@ -1,0 +1,18 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ include "ros2k8s.fullname" . }}-discovery-server
+  labels:
+    app.kubernetes.io/name: {{ include "ros2k8s.fullname" . }}
+    app.kubernetes.io/component: discovery-server
+spec:
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/name: {{ include "ros2k8s.fullname" . }}
+    app.kubernetes.io/component: discovery-server
+  ports:
+    - name: udp-ds
+      port: 11811
+      targetPort: udp-ds
+      protocol: UDP

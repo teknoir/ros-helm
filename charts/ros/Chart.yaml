@@ -1,0 +1,7 @@
+apiVersion: v2
+name: ros
+description: Chart to install ROS
+
+type: application
+version: 0.0.0-alpha.0
+appVersion: 0.0.1

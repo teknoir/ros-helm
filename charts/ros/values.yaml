@@ -1,0 +1,21 @@
+discoveryServer:
+  image: us-docker.pkg.dev/teknoir/gcr.io/dds-discovery:jazzy-20260123-192333
+  replicas: 1
+  resources: {}
+
+ros:
+  image: us-docker.pkg.dev/teknoir/gcr.io/ros:jazzy-20260123-192333
+  replicas: 1
+
+  # These args are passed to the image ENTRYPOINT (ros_entrypoint.sh).
+  # Default runs a demo talker (installed in ros2.Dockerfile above).
+  args:
+    - ros2
+    - run
+    - demo_nodes_cpp
+    - talker
+
+  env:
+    ROS_DOMAIN_ID: "0"
+
+  resources: {}
