@@ -100,17 +100,10 @@ RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
     colcon-argcomplete \
     ;
 
-# Non-root user for common PodSecurity defaults
-RUN groupadd --gid 10001 ros \
-    && useradd  --uid 10001 --gid 10001 -m ros \
-    && mkdir -p /ros_ws \
-    && chown -R ros:ros /ros_ws
-
 COPY ros_entrypoint.sh /ros_entrypoint.sh
 RUN chmod +x /ros_entrypoint.sh
 
 WORKDIR /ros_ws
-USER 10001:10001
 
 ENTRYPOINT ["/usr/bin/tini", "--", "/ros_entrypoint.sh"]
 CMD ["bash"]

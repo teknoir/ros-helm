@@ -36,7 +36,7 @@ spec:
         artifacts:
           - name: kitti-bag
             image: us-docker.pkg.dev/teknoir/gcr.io/ros-kitti-bag
-            tag: jazzy-20260125-143217
+            tag: jazzy-20260125-212526
       
       - name: turtlebot3-simulation
         commands:
@@ -46,7 +46,7 @@ spec:
         artifacts:
           - name: tb3-headless
             image: us-docker.pkg.dev/teknoir/gcr.io/ros-tb3-headless
-            tag: jazzy-20260125-195555
+            tag: jazzy-20260125-212529
 
       - name: turtlebot3-slam
         commands:

@@ -100,12 +100,6 @@ spec:
               protocol: {{ default "TCP" $port.protocol }}
             {{- end }}
           {{- end }}
-          securityContext:
-            allowPrivilegeEscalation: false
-            runAsNonRoot: true
-            readOnlyRootFilesystem: false
-            capabilities:
-              drop: [ "ALL" ]
           resources:
             {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
           volumeMounts:
