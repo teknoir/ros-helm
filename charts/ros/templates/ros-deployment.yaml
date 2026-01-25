@@ -49,6 +49,10 @@ spec:
             - name: ROS_DOMAIN_ID
               value: {{ default "0" $instance.domainId | quote }}
 
+            # Super client mode allows nodes to communicate across different domain IDs and discover all topics in the ROS graph.
+            - name: ROS_SUPER_CLIENT
+              value: {{ default "FALSE" $instance.superClient | quote }}
+
             # Ensure pods can communicate over the network
             - name: ROS_LOCALHOST_ONLY
               value: "0"

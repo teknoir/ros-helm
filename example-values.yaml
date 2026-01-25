@@ -6,6 +6,7 @@ instances:
     commands: |
       ros2 run demo_nodes_py listener
   - name: foxglove-bridge
+    superClient: "TRUE"
     commands: |
       ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
   - name: play-kitti-bag

@@ -25,6 +25,9 @@ defaults:
   # domainId can be used to set the ROS_DOMAIN_ID environment variable
   # e.g., domainId: 1
 
+  # superClient can be used to set the ROS_SUPER_CLIENT environment variable
+  # e.g., superClient: "TRUE"
+
   # artifacts can be used to specify init containers for pre-loading data
   # e.g., artifacts:
   #         - name: custom-artifact
