@@ -77,6 +77,6 @@ spec:
         - name: workspace-volume
           hostPath:
             # directory location on host
-            path: "{{ default $.Values.hostWorkspacePath $instance.hostWorkspacePath }}"
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
 {{- end }}
