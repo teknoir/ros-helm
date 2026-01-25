@@ -49,7 +49,9 @@ spec:
           command: [ "/bin/sh", "-c" ]
           args:
             - |
-              {{ $artifact.commands }}
+              {{- range $artifact.commands }}
+              {{ . }}
+              {{- end }}
           {{- end }}
           volumeMounts:
             - name: workspace-volume
@@ -62,7 +64,9 @@ spec:
           imagePullPolicy: IfNotPresent
           args:
             - |
-              {{ default $.Values.defaults.commands $instance.commands }}
+              {{- range (default $.Values.defaults.commands $instance.commands) }}
+              {{ . }}
+              {{- end }}
           env:
             # Point ROS 2 nodes at the in-cluster Discovery Server service.
             # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
