@@ -12,7 +12,6 @@ docker buildx build \
   --push \
   --tag "${IMAGE}:${BRANCH_NAME}-${SHORT_SHA}" \
   --build-arg ROS_DISTRO="${ROS_DISTRO}" \
-  --file kitti_dataset_bag.Dockerfile \
   .
 
 echo "Images built and pushed:"

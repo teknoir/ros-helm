@@ -16,6 +16,12 @@ defaults:
   hostWorkspacePath: /opt/teknoir/ros/default_ws
   commands: |
     ros2 run demo_nodes_cpp talker
+  # K8s NodePort range is typically 30000-32767
+  # e.g., nodePorts:
+  #        - name: http-fg-bridge
+  #          port: 8765
+  #          targetPort: 8765
+  #          nodePort: 31765
   nodePorts: []
 
   # Hidden settings for ROS instances
@@ -41,6 +47,6 @@ discoveryServer:
   enabled: true
   image:
     repository: us-docker.pkg.dev/teknoir/gcr.io/dds-discovery
-    tag: jazzy
+    tag: jazzy-20260125-134403
   replicas: 1
   resources: {}
