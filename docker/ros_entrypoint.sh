@@ -11,4 +11,4 @@ if [ -f "/ros_ws/install/setup.bash" ]; then
 fi
 set -u
 
-exec "$@"
+/bin/bash -c "$@"
