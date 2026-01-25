@@ -37,7 +37,7 @@ spec:
         - name: ros
           image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
           imagePullPolicy: IfNotPresent
-          command: [ "/bin/sh", "-c" ]
+{{/*          command: [ "/bin/sh", "-c" ]*/}}
           args:
             - |
               {{ default $.Values.defaults.commands $instance.commands }}
