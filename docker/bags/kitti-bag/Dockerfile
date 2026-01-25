@@ -24,4 +24,6 @@ RUN  apk add --no-cache rsync
 
 COPY --from=kitti_bag_final /data/kitti_2011_09_26_drive_0002_synced_rosbag_v2 /bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2
 
+USER 10001:10001
+
 CMD ["sh", "-c", "mkdir -p /ros_ws/bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2 && rsync --checksum --itemize-changes --delete-before -avhr /bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2/ /ros_ws/bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2/"]
