@@ -16,6 +16,7 @@ defaults:
   hostWorkspacePath: /opt/teknoir/ros/default_ws
   commands: |
     ros2 run demo_nodes_cpp talker
+  nodePorts: []
 
   # Hidden settings for ROS instances
 

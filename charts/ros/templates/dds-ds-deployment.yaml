@@ -1,5 +1,22 @@
 {{- if .Values.discoveryServer.enabled }}
 ---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-discovery-server
+  labels:
+    app: {{ .Release.Name }}-discovery-server
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Release.Name }}-discovery-server
+  ports:
+    - name: udp-ds
+      port: 11811
+      targetPort: udp-ds
+      protocol: UDP
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:

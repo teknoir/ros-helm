@@ -1,6 +1,5 @@
 FROM tyoung96/kitti2bag AS kitti2bag
 
-RUN  #apk add --no-cache unzip wget
 RUN apt-get update && apt-get install -y wget unzip
 
 RUN wget https://s3.eu-central-1.amazonaws.com/avg-kitti/raw_data/2011_09_26_drive_0002/2011_09_26_drive_0002_sync.zip
