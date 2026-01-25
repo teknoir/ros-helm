@@ -45,6 +45,14 @@ spec:
         - name: init-container-{{ $artifact.name }}
           image: "{{ $artifact.image }}:{{ $artifact.tag }}"
           imagePullPolicy: Always
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 10001
+            runAsGroup: 10001
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ "ALL" ]
           {{- if not (empty $artifact.commands) }}
           command: [ "/bin/sh", "-c" ]
           args:

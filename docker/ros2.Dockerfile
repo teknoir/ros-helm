@@ -30,7 +30,21 @@ ENV \
 # tini for proper signal handling (SIGTERM) + optional demo node for quick smoke tests
 RUN apt-get update && apt-get install -y --no-install-recommends \
       tini \
+      build-essential \
+      cmake \
+      git \
+      unzip \
+      wget \
+      curl \
+      vim \
+      nano \
+      locales \
+      sudo \
       v4l-utils \
+      python3-pip \
+      python3-dev \
+      python3-venv \
+      python-is-python3 \
       python3-colcon-common-extensions \
       python3-rosdep \
       python3-vcstool \
@@ -63,6 +77,28 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-${ROS_DISTRO}-nav2-bringup \
       ros-${ROS_DISTRO}-rviz2 \
     && rm -rf /var/lib/apt/lists/*
+
+# Install useful Python packages for ROS 2 development
+RUN pip3 install --no-cache-dir --break-system-packages --ignore-installed \
+    'setuptools<80,>=30.3.0' \
+    pytest \
+    pytest-cov \
+    pytest-mock \
+    flake8 \
+    mypy \
+    black \
+    isort \
+    pylint \
+    ipython \
+    jupyter \
+    'rosbags>=0.9.11' \
+    colcon-ros \
+    colcon-cmake \
+    colcon-python-setup-py \
+    colcon-mixin \
+    colcon-ros-bundle \
+    colcon-argcomplete \
+    ;
 
 # Non-root user for common PodSecurity defaults
 RUN groupadd --gid 10001 ros \
