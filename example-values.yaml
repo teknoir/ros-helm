@@ -5,6 +5,18 @@ instances:
   - name: listener
     commands: |
       ros2 run demo_nodes_py listener
+  - name: foxglove-bridge
+    commands: |
+      ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+  - name: play-kitti-bag
+    commands: |
+      ros2 bag play kitti_2011_09_26_drive_0002_synced_rosbag_v2/ --loop
+    artifacts:
+      - name: kitti-bag
+        image: us-docker.pkg.dev/teknoir/gcr.io/ros-kitti-bag
+        tag: jazzy-20260125-120641
+        commands: |
+          ros2 bag play bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2 --loop
 
 # Values possible for ROS instances
 defaults:

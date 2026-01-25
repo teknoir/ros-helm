@@ -1,4 +1,4 @@
-{{- range .Values.instances }}
+{{- range $instance := .Values.instances }}
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -7,7 +7,7 @@ metadata:
   labels:
     app: {{ $.Release.Name }}-{{ .name }}
 spec:
-  replicas: {{ default $.Values.defaults.replicas .replicas }}
+  replicas: {{ default $.Values.defaults.replicas $instance.replicas }}
   selector:
     matchLabels:
       app: {{ $.Release.Name }}-{{ .name }}
@@ -16,23 +16,39 @@ spec:
       labels:
         app: {{ $.Release.Name }}-{{ .name }}
     spec:
-      securityContext:
-        seccompProfile:
-          type: RuntimeDefault
+      {{- if not (empty $instance.artifacts) }}
+      initContainers:
+        {{- range $artifact := $instance.artifacts }}
+        - name: init-container-{{ $artifact.name }}
+          image: "{{ $artifact.image }}:{{ $artifact.tag }}"
+          imagePullPolicy: Always
+          {{- if not (empty $artifact.commands) }}
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              {{ $artifact.commands }}
+          {{- end }}
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
+        {{- end }}
+      {{- end }}
       containers:
         - name: ros
-          image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) .image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) .image).tag }}"
+          image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
           imagePullPolicy: IfNotPresent
+          command: [ "/bin/sh", "-c" ]
           args:
-            {{- toYaml (default $.Values.defaults.args .args) | nindent 12 }}
+            - |
+              {{ default $.Values.defaults.commands $instance.commands }}
           env:
             # Point ROS 2 nodes at the in-cluster Discovery Server service.
             # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
             - name: ROS_DISCOVERY_SERVER
-              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) .discoveryServerAddress | quote }}
+              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) $instance.discoveryServerAddress | quote }}
 
             - name: ROS_DOMAIN_ID
-              value: {{ default "0" .domainId | quote }}
+              value: {{ default "0" $instance.domainId | quote }}
 
             # Ensure pods can communicate over the network
             - name: ROS_LOCALHOST_ONLY
@@ -53,5 +69,14 @@ spec:
             capabilities:
               drop: [ "ALL" ]
           resources:
-            {{- toYaml (default $.Values.defaults.resources .resources) | nindent 12 }}
+            {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /ros_ws
+      volumes:
+        - name: workspace-volume
+          hostPath:
+            # directory location on host
+            path: "{{ default $.Values.hostWorkspacePath $instance.hostWorkspacePath }}"
+            type: DirectoryOrCreate
 {{- end }}

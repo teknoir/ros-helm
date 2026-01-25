@@ -30,7 +30,13 @@ ENV \
 # tini for proper signal handling (SIGTERM) + optional demo node for quick smoke tests
 RUN apt-get update && apt-get install -y --no-install-recommends \
       tini \
+      v4l-utils \
       ros-${ROS_DISTRO}-demo-nodes-cpp \
+      ros-${ROS_DISTRO}-demo-nodes-py \
+      ros-${ROS_DISTRO}-foxglove-bridge \
+      ros-${ROS_DISTRO}-image-tools \
+      ros-${ROS_DISTRO}-v4l2-camera \
+      ros-${ROS_DISTRO}-turtlesim \
     && rm -rf /var/lib/apt/lists/*
 
 # Non-root user for common PodSecurity defaults
