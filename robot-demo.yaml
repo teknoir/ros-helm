@@ -7,7 +7,7 @@ metadata:
 spec:
   repo: https://teknoir.github.io/ros-helm
   chart: ros
-  version: 0.0.0-beta.1
+  version: 0.0.0-beta.5
   targetNamespace: default
   valuesContent: |-
     defaults:
@@ -21,15 +21,17 @@ spec:
       - name: listener
         commands:
           - ros2 run demo_nodes_py listener
+    
       - name: foxglove-bridge
         superClient: "TRUE"
         commands:
-          - ros2 launch foxglove_bridge foxglove_bridge_launch.xml port:=8765
+          - ros2 launch foxglove_bridge foxglove_bridge_launch.xml use_sim_time:=True port:=8765
         nodePorts:
           - name: http-fg-bridge
             port: 8765
             targetPort: 8765
             nodePort: 31765
+    
       - name: play-kitti-bag
         commands:
           - ros2 bag play bags/kitti_2011_09_26_drive_0002_synced_rosbag_v2 --loop
@@ -40,16 +42,15 @@ spec:
       
       - name: turtlebot3-simulation
         commands:
-          - export TURTLEBOT3_MODEL=waffle
-          - ros2 launch tb3_headless_launch tb3_world_headless.launch.py &
-          - ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
+          - export TURTLEBOT3_MODEL=waffle_pi
+          - ros2 launch tb3_headless_launch tb3_house_headless.launch.py use_sim_time:=True
         artifacts:
           - name: tb3-headless
             image: us-docker.pkg.dev/teknoir/gcr.io/ros-tb3-headless
-            tag: jazzy-20260125-212529
+            tag: jazzy-20260127-093113
 
       - name: turtlebot3-slam
         commands:
-          - export TURTLEBOT3_MODEL=waffle
+          - export TURTLEBOT3_MODEL=waffle_pi
           - ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
 

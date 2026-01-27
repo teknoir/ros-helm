@@ -39,6 +39,7 @@ spec:
       labels:
         app: {{ $.Release.Name }}-{{ .name }}
     spec:
+      runtimeClassName: nvidia
       {{- if not (empty $instance.artifacts) }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}
