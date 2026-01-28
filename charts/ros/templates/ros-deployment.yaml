@@ -98,6 +98,8 @@ spec:
               value: "Y"
             - name: ACCEPT_EULA
               value: "Y"
+            - name: OMNI_ENV_PRIVACY_USERID
+              value: "teknoir@teknoir.ai"
             {{- end }}
           {{- if not (empty $instance.nodePorts) }}
           ports:
@@ -147,27 +149,27 @@ spec:
             sizeLimit: 8Gi
         - name: isaac-cache
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/cache/main"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/cache/main"
             type: DirectoryOrCreate
         - name: isaac-computecache
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/computecache"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/computecache"
             type: DirectoryOrCreate
         - name: isaac-logs
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/logs"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/logs"
             type: DirectoryOrCreate
         - name: isaac-config
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/config"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/config"
             type: DirectoryOrCreate
         - name: isaac-data
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/data"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/data"
             type: DirectoryOrCreate
         - name: isaac-pkg
           hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/pkg"
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/pkg"
             type: DirectoryOrCreate
           {{- end }}
 {{- end }}
