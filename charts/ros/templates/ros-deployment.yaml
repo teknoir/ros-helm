@@ -48,6 +48,17 @@ spec:
       {{- end }}
       {{- if not (empty $instance.artifacts) }}
       initContainers:
+        {{- if $instance.nviros }}
+        - name: change-ownership-container
+          image: busybox
+          command: [ "/bin/chown","-R","1234:1234", "/ws" ]
+          securityContext:
+            runAsUser: 0
+            privileged: true
+          volumeMounts:
+            - name: isaac-workspace
+              mountPath: /ws
+        {{- end }}
         {{- range $artifact := $instance.artifacts }}
         - name: init-container-{{ $artifact.name }}
           image: "{{ $artifact.image }}:{{ $artifact.tag }}"
@@ -109,8 +120,12 @@ spec:
               value: "Y"
             - name: ACCEPT_EULA
               value: "Y"
+            - name: PRIVACY_USERID
+              value: "teknoir@teknoir.ai"
             - name: OMNI_ENV_PRIVACY_USERID
               value: "teknoir@teknoir.ai"
+            - name: OMNI_ENV_PRIVACY_CONSENT
+              value: "Y"
             {{- end }}
           {{- if not (empty $instance.nodePorts) }}
           ports:
@@ -152,6 +167,10 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 8Gi
+        - name: isaac-workspace
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}"
+            type: DirectoryOrCreate
         - name: isaac-cache
           hostPath:
             path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/cache/main"
