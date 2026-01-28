@@ -41,6 +41,8 @@ spec:
     spec:
       runtimeClassName: nvidia
       {{- if $instance.nviros }}
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
       securityContext:
         runAsUser: 1234
         runAsGroup: 1234
@@ -86,11 +88,6 @@ spec:
       {{- end }}
       containers:
         - name: ros
-          {{- if $instance.nviros }}
-          securityContext:
-            runAsUser: 1234
-            runAsGroup: 1234
-          {{- end }}
           image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
           imagePullPolicy: IfNotPresent
           args:
