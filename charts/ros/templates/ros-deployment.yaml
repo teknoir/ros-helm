@@ -48,7 +48,7 @@ spec:
         runAsGroup: 1234
         fsGroup: 1234
       {{- end }}
-      {{- if not (empty $instance.artifacts) }}
+      {{- if or (not (empty $instance.artifacts)) $instance.nviros }}
       initContainers:
         {{- if $instance.nviros }}
         - name: change-ownership-container
