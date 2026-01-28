@@ -3,6 +3,16 @@ entries:
   ros:
   - apiVersion: v2
     appVersion: 0.0.1
+    created: "2026-01-28T12:05:28.758126171Z"
+    description: Chart to install ROS
+    digest: 5c1ef65b95c14ded5079378523714a2bf7f0a6367d90d3e081f4c406d38f00b3
+    name: ros
+    type: application
+    urls:
+    - https://github.com/teknoir/ros-helm/releases/download/ros-0.0.0-beta.6/ros-0.0.0-beta.6.tgz
+    version: 0.0.0-beta.6
+  - apiVersion: v2
+    appVersion: 0.0.1
     created: "2026-01-27T08:45:47.988254427Z"
     description: Chart to install ROS
     digest: 4846645cce76b53e97b4b25f57f7ee0b09a07655df3d9f631e0cde382f2c10ba
@@ -141,4 +151,4 @@ entries:
     urls:
     - https://github.com/teknoir/ros-helm/releases/download/ros-0.0.0-alpha.1/ros-0.0.0-alpha.1.tgz
     version: 0.0.0-alpha.1
-generated: "2026-01-27T08:45:47.988444822Z"
+generated: "2026-01-28T12:05:28.758309965Z"
