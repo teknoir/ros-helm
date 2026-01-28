@@ -56,18 +56,28 @@ spec:
           command:
             - |
               chown -R 1234:1234 \
-                /isaac-sim/.local/share/ov/data \
                 /isaac-sim/.cache \
                 /isaac-sim/.nv/ComputeCache \
                 /isaac-sim/.nvidia-omniverse/logs \
                 /isaac-sim/.nvidia-omniverse/config \
+                /isaac-sim/.local/share/ov/data \
                 /isaac-sim/.local/share/ov/pkg
           securityContext:
             runAsUser: 0
             privileged: true
           volumeMounts:
-            - name: isaac-workspace
-              mountPath: /isaac-sim
+            - name: isaac-cache
+              mountPath: /isaac-sim/.cache
+            - name: isaac-computecache
+              mountPath: /isaac-sim/.nv/ComputeCache
+            - name: isaac-logs
+              mountPath: /isaac-sim/.nvidia-omniverse/logs
+            - name: isaac-config
+              mountPath: /isaac-sim/.nvidia-omniverse/config
+            - name: isaac-data
+              mountPath: /isaac-sim/.local/share/ov/data
+            - name: isaac-pkg
+              mountPath: /isaac-sim/.local/share/ov/pkg
         {{- end }}
         {{- range $artifact := $instance.artifacts }}
         - name: init-container-{{ $artifact.name }}
@@ -172,10 +182,6 @@ spec:
           emptyDir:
             medium: Memory
             sizeLimit: 8Gi
-        - name: isaac-workspace
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}"
-            type: DirectoryOrCreate
         - name: isaac-cache
           hostPath:
             path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/cache/main"
