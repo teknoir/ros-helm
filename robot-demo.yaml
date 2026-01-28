@@ -54,3 +54,10 @@ spec:
           - export TURTLEBOT3_MODEL=waffle_pi
           - ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
 
+      - name: isaac-sim
+        image:
+          registry: nvcr.io/nvidia/isaac-sim
+          tag: 5.1.0    
+        nviros: true
+        commands:
+          - ./runheadless.sh -v

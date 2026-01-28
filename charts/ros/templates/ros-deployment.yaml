@@ -113,8 +113,6 @@ spec:
             - name: workspace-volume
               mountPath: /ros_ws
             {{- if $instance.nviros }}
-            - name: isaac-sim-volume
-              mountPath: "{{ $instance.hostWorkspacePath }}"
             - name: isaac-cache
               mountPath: /isaac-sim/.cache
             - name: isaac-computecache
