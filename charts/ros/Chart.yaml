@@ -3,5 +3,5 @@ name: ros
 description: Chart to install ROS
 
 type: application
-version: 0.0.0-beta.7
+version: 0.0.0-beta.8
 appVersion: 0.0.1
