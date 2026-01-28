@@ -51,13 +51,21 @@ spec:
         {{- if $instance.nviros }}
         - name: change-ownership-container
           image: busybox
-          command: [ "/bin/chown","-R","1234:1234", "/ws" ]
+          command:
+            - |
+              chown -R 1234:1234 \
+                /isaac-sim/.local/share/ov/data \
+                /isaac-sim/.cache \
+                /isaac-sim/.nv/ComputeCache \
+                /isaac-sim/.nvidia-omniverse/logs \
+                /isaac-sim/.nvidia-omniverse/config \
+                /isaac-sim/.local/share/ov/pkg
           securityContext:
             runAsUser: 0
             privileged: true
           volumeMounts:
             - name: isaac-workspace
-              mountPath: /ws
+              mountPath: /isaac-sim
         {{- end }}
         {{- range $artifact := $instance.artifacts }}
         - name: init-container-{{ $artifact.name }}
