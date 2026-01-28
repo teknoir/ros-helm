@@ -53,18 +53,23 @@ spec:
         {{- if $instance.nviros }}
         - name: change-ownership-container
           image: busybox
-          command:
+          command: ["sh","-lc"]
+          args:
             - |
-              chown -R 1234:1234 \
+              set -e
+              for d in \
                 /isaac-sim/.cache \
                 /isaac-sim/.nv/ComputeCache \
                 /isaac-sim/.nvidia-omniverse/logs \
                 /isaac-sim/.nvidia-omniverse/config \
                 /isaac-sim/.local/share/ov/data \
                 /isaac-sim/.local/share/ov/pkg
+              do
+                mkdir -p "$d"
+                chown -R 1234:1234 "$d"
+              done
           securityContext:
             runAsUser: 0
-            privileged: true
           volumeMounts:
             - name: isaac-cache
               mountPath: /isaac-sim/.cache
