@@ -37,6 +37,11 @@ instances:
       - export TURTLEBOT3_MODEL=waffle
       - ros2 launch turtlebot3_cartographer cartographer.launch.py use_sim_time:=True
 
+  - name: isaac-sim
+    nviros: true
+    commands:
+      - ./runheadless.sh -v
+
 # Values possible for ROS instances
 defaults:
   image:

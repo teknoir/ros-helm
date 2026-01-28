@@ -1,7 +1,5 @@
 FROM alpine:3
 
-ARG TARGETARCH
-
 RUN  apk add --no-cache rsync
 
 COPY tb3_headless_launch /src/tb3_headless_launch

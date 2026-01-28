@@ -92,7 +92,13 @@ spec:
             # Default to UDPv4 only in Kubernetes unless you opt into SHM explicitly  [oai_citation:7‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
             - name: FASTDDS_BUILTIN_TRANSPORTS
               value: "UDPv4"
-
+            {{- if $instance.nviros }}
+            # Isaac Sim specific environment variables
+            - name: PRIVACY_CONSENT
+              value: "Y"
+            - name: ACCEPT_EULA
+              value: "Y"
+            {{- end }}
           {{- if not (empty $instance.nodePorts) }}
           ports:
             {{- range $port := $instance.nodePorts }}
@@ -106,10 +112,52 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /ros_ws
+            {{- if $instance.nviros }}
+            - name: isaac-sim-volume
+              mountPath: "{{ $instance.hostWorkspacePath }}"
+            - name: isaac-cache
+              mountPath: /isaac-sim/.cache
+            - name: isaac-computecache
+              mountPath: /isaac-sim/.nv/ComputeCache
+            - name: isaac-logs
+              mountPath: /isaac-sim/.nvidia-omniverse/logs
+            - name: isaac-config
+              mountPath: /isaac-sim/.nvidia-omniverse/config
+            - name: isaac-data
+              mountPath: /isaac-sim/.local/share/ov/data
+            - name: isaac-pkg
+              mountPath: /isaac-sim/.local/share/ov/pkg
+            {{- end }}
       volumes:
         - name: workspace-volume
           hostPath:
             # directory location on host
             path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
+        {{- if $instance.nviros }}
+        - name: isaac-cache
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/cache/main"
+            type: DirectoryOrCreate
+        - name: isaac-computecache
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/computecache"
+            type: DirectoryOrCreate
+        - name: isaac-logs
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/logs"
+            type: DirectoryOrCreate
+        - name: isaac-config
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/config"
+            type: DirectoryOrCreate
+        - name: isaac-data
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/data"
+            type: DirectoryOrCreate
+        - name: isaac-pkg
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostIsaacSimPath }}/pkg"
+            type: DirectoryOrCreate
+          {{- end }}
 {{- end }}

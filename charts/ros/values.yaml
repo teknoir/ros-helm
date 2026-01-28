@@ -24,6 +24,11 @@ defaults:
   #          nodePort: 31765
   nodePorts: []
 
+
+  # NVIROS
+  nviros: false
+  hostIsaacSimPath: /opt/teknoir/ros/default-isaac-sim
+
   # Hidden settings for ROS instances
 
   # discoveryServerAddress can be used to override the default Discovery Server address

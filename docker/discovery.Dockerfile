@@ -7,7 +7,7 @@
 # Fast DDS uses UDP port 11811 by default for ROS_DISCOVERY_SERVER.  [oai_citation:4‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
 
 ARG ROS_DISTRO=jazzy
-FROM ros:${ROS_DISTRO}-ros-base
+FROM ros:${ROS_DISTRO}-ros-base AS fastdds-discovery-server
 
 SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
