@@ -40,6 +40,12 @@ spec:
         app: {{ $.Release.Name }}-{{ .name }}
     spec:
       runtimeClassName: nvidia
+      {{- if $instance.nviros }}
+      securityContext:
+        runAsUser: 1234
+        runAsGroup: 1234
+        fsGroup: 1234
+      {{- end }}
       {{- if not (empty $instance.artifacts) }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}
@@ -61,6 +67,11 @@ spec:
       {{- end }}
       containers:
         - name: ros
+          {{- if $instance.nviros }}
+          securityContext:
+            runAsUser: 1234
+            runAsGroup: 1234
+          {{- end }}
           image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
           imagePullPolicy: IfNotPresent
           args:
@@ -108,12 +119,6 @@ spec:
               containerPort: {{ $port.targetPort }}
               protocol: {{ default "TCP" $port.protocol }}
             {{- end }}
-          {{- end }}
-          {{- if $instance.nviros }}
-          securityContext:
-            runAsUser: 1234
-            runAsGroup: 1234
-            fsGroup: 1234
           {{- end }}
           resources:
             {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
