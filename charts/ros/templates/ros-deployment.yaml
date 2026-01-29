@@ -51,7 +51,7 @@ spec:
       {{- if or (not (empty $instance.artifacts)) $instance.nviros }}
       initContainers:
         {{- if $instance.nviros }}
-        - name: change-ownership-container
+        - name: change-ownership
           image: busybox
           command: ["sh","-lc"]
           args:
@@ -135,6 +135,10 @@ spec:
             - name: FASTDDS_BUILTIN_TRANSPORTS
               value: "UDPv4"
             {{- if $instance.nviros }}
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "all"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
             # Isaac Sim specific environment variables
             - name: PRIVACY_CONSENT
               value: "Y"
