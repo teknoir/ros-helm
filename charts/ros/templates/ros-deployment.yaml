@@ -50,6 +50,24 @@ spec:
       {{- end }}
       {{- if or (not (empty $instance.artifacts)) $instance.nviros }}
       initContainers:
+        {{- range $artifact := $instance.artifacts }}
+        - name: init-container-{{ $artifact.name }}
+          image: "{{ $artifact.image }}:{{ $artifact.tag }}"
+          imagePullPolicy: Always
+          {{- if not (empty $artifact.commands) }}
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              {{- range $artifact.commands }}
+              {{ . }}
+              {{- end }}
+          {{- end }}
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /ros_ws
+        {{- end }}
         {{- if $instance.nviros }}
         - name: change-ownership
           image: busybox
@@ -83,22 +101,6 @@ spec:
               mountPath: /isaac-sim/.local/share/ov/data
             - name: isaac-pkg
               mountPath: /isaac-sim/.local/share/ov/pkg
-        {{- end }}
-        {{- range $artifact := $instance.artifacts }}
-        - name: init-container-{{ $artifact.name }}
-          image: "{{ $artifact.image }}:{{ $artifact.tag }}"
-          imagePullPolicy: Always
-          {{- if not (empty $artifact.commands) }}
-          command: [ "/bin/sh", "-c" ]
-          args:
-            - |
-              {{- range $artifact.commands }}
-              {{ . }}
-              {{- end }}
-          {{- end }}
-          volumeMounts:
-            - name: workspace-volume
-              mountPath: /ros_ws
         {{- end }}
       {{- end }}
       containers:
