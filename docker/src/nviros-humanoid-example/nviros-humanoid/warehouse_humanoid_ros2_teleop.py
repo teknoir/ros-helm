@@ -139,14 +139,15 @@ add_reference_to_stage(HUMANOID_USD, "/World/Humanoid")
 
 # Wrap humanoid root so we can move it
 humanoid_root = XFormPrim("/World/Humanoid", name="HumanoidRoot")
+_pose_pos = np.zeros((1, 3), dtype=np.float64)
+_pose_quat = np.zeros((1, 4), dtype=np.float64)
 
 # Spawn pose (adjust to taste)
 pos = np.array([0.0, 0.0, 0.0], dtype=np.float64)
 yaw = 0.0
-humanoid_root.set_world_pose(
-    position=pos,
-    orientation=rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, 0.0]), degrees=False),
-)
+_pose_pos[0, :] = pos
+_pose_quat[0, :] = rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False)
+humanoid_root.set_world_poses(positions=_pose_pos, orientations=_pose_quat)
 
 # Camera mount: child prim under humanoid so it follows humanoid root motion
 # (Docs: attaching camera to a prim makes it inherit that prim's pose.)
@@ -263,10 +264,9 @@ try:
         pos[0] += dx_world
         pos[1] += dy_world
 
-        humanoid_root.set_world_pose(
-            position=pos,
-            orientation=rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False),
-        )
+        _pose_pos[0, :] = pos
+        _pose_quat[0, :] = rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False)
+        humanoid_root.set_world_poses(positions=_pose_pos, orientations=_pose_quat)
 
         # Publish JPEG CompressedImage at throttled rate
         if (sim_t - last_pub_t) >= publish_period:

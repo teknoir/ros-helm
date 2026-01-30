@@ -25,6 +25,6 @@ spec:
             image: us-docker.pkg.dev/teknoir/gcr.io/nviros-humanoid
             tag: jazzy-20260130-080259    
         commands:
-          - ./python.sh teknoir-examples/nviros-humanoid/warehouse_humanoid_ros2_teleop.py
+          - ./python.sh /ros_ws/teknoir-artifacts/nviros-humanoid/warehouse_humanoid_ros2_teleop.py
 
 ```
