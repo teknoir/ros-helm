@@ -124,10 +124,12 @@ if not assets_root:
     )
 
 # Environment USD (documented under /Isaac/Environments/... in asset packs)
-WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
+#WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
+WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd"
 
-# Humanoid USD (Isaac Sim 5.0 docs list Robots/IsaacSim/Humanoid/humanoid.usd)
-HUMANOID_USD = assets_root + "/Robots/IsaacSim/Humanoid/humanoid.usd"
+#HUMANOID_USD = assets_root + "/Isaac/Robots/IsaacSim/Humanoid/humanoid.usd"
+#HUMANOID_USD = assets_root + "/Isaac/Robots/Unitree/H1/h1.usd"
+HUMANOID_USD = assets_root + "/Isaac/Robots/NVIDIA/NovaCarter/nova_carter.usd"
 
 world = World(stage_units_in_meters=1.0)
 
@@ -149,27 +151,62 @@ _pose_pos[0, :] = pos
 _pose_quat[0, :] = rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False)
 humanoid_root.set_world_poses(positions=_pose_pos, orientations=_pose_quat)
 
-# Camera mount: child prim under humanoid so it follows humanoid root motion
-# (Docs: attaching camera to a prim makes it inherit that prim's pose.)
-cam_mount_path = "/World/Humanoid/camera_mount"
-prim_utils.create_prim(
-    cam_mount_path,
-    "Xform",
-    translation=np.array([0.0, 0.0, 1.6]),  # ~head height
-    orientation=rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, 0.0]), degrees=False),
-)
+import omni.usd
+from pxr import Usd, UsdGeom, Gf  # IMPORTANT: import AFTER SimulationApp is running
 
-# Create Camera sensor under that mount
+# Camera mount: child prim under humanoid head so it follows humanoid head motion
+stage = omni.usd.get_context().get_stage()
+
+humanoid_root_path = "/World/Humanoid"
+humanoid_prim = stage.GetPrimAtPath(humanoid_root_path)
+
+if not humanoid_prim or not humanoid_prim.IsValid():
+    print(f"[error] Prim not found or invalid: {humanoid_root_path}")
+else:
+    print(f"[humanoid] root: {humanoid_prim.GetPath()}")
+    # Traverse all prims under the humanoid root using Usd.PrimRange
+    for prim in Usd.PrimRange(humanoid_prim):
+        print(f"[humanoid] {prim.GetPath()}")
+
+cam_mount_path = "/World/Humanoid/chassis_link"
+# cam_mount_path = "/World/Humanoid/mid360_link"
+
+existing = stage.GetPrimAtPath(cam_mount_path)
+if existing and existing.IsValid():
+    print(f"[isaac] reusing existing prim: {cam_mount_path}")
+else:
+    prim_utils.create_prim(cam_mount_path, "Xform")
+    print(f"[isaac] created prim: {cam_mount_path}")
+
+# Always (re)set the local transform so reruns are deterministic
+prim = stage.GetPrimAtPath(cam_mount_path)
+xform = UsdGeom.XformCommonAPI(prim)
+xform.SetTranslate(Gf.Vec3d(0.0, 0.0, 0.0))
+
 camera = Camera(
     prim_path=cam_mount_path + "/rgb",
     resolution=(args.width, args.height),
-    frequency=60,  # internal sensor update; publishing is throttled separately
-    # Rotate so it generally looks forward along +X (USD cameras often look down -Z by default)
-    orientation=rot_utils.euler_angles_to_quats(np.array([0.0, -90.0, 0.0]), degrees=True),
+    frequency=60,
 )
 
 world.reset()
 camera.initialize()
+
+camera.set_local_pose(
+    translation=np.array([0.10, 0.00, 0.02]),     # forward, left, up
+    orientation=np.array([1.0, 0.0, 0.0, 0.0]),   # identity (w,x,y,z)
+    camera_axes="world",
+)
+
+import math
+w, h = args.width, args.height
+cx, cy = w / 2.0, h / 2.0
+
+target_fov_deg = 130.0
+fx = (w / 2.0) / math.tan(math.radians(target_fov_deg) / 2.0)
+fy = fx
+
+camera.set_opencv_pinhole_properties(cx=cx, cy=cy, fx=fx, fy=fy, pinhole=[0.0]*12)
 
 # -----------------------------------------------------------------------------
 # ROS2SubscribeTwist graph (teleop via Isaac Sim ROS2 bridge node)
