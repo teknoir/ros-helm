@@ -30,8 +30,8 @@ parser.add_argument("--image-topic", default="/humanoid/camera/image/compressed"
 parser.add_argument("--frame-id", default="humanoid_camera_optical", help="frame_id in CompressedImage.header")
 parser.add_argument("--width", type=int, default=640)
 parser.add_argument("--height", type=int, default=480)
-parser.add_argument("--publish-hz", type=float, default=10.0, help="Compressed image publish rate")
-parser.add_argument("--jpeg-quality", type=int, default=80, help="JPEG quality (1-95 typical)")
+parser.add_argument("--publish-hz", type=float, default=5.0, help="Compressed image publish rate")
+parser.add_argument("--jpeg-quality", type=int, default=55, help="JPEG quality (1-95 typical)")
 args, _unknown = parser.parse_known_args()
 
 # -----------------------------------------------------------------------------
@@ -63,6 +63,7 @@ def _enable_first(ext_names):
 
 _enable_first(["isaacsim.ros2.bridge", "omni.isaac.ros2_bridge"])
 _enable_first(["isaacsim.sensors.camera", "omni.isaac.sensor"])
+_enable_first(["isaacsim.robot.policy.examples"])
 
 simulation_app.update()
 
@@ -127,29 +128,48 @@ if not assets_root:
 #WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
 WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd"
 
-#HUMANOID_USD = assets_root + "/Isaac/Robots/IsaacSim/Humanoid/humanoid.usd"
-#HUMANOID_USD = assets_root + "/Isaac/Robots/Unitree/H1/h1.usd"
-HUMANOID_USD = assets_root + "/Isaac/Robots/NVIDIA/NovaCarter/nova_carter.usd"
-
-world = World(stage_units_in_meters=1.0)
-
 print(f"[isaac] loading warehouse: {WAREHOUSE_USD}")
 add_reference_to_stage(WAREHOUSE_USD, "/World/Warehouse")
 
-print(f"[isaac] loading humanoid: {HUMANOID_USD}")
-add_reference_to_stage(HUMANOID_USD, "/World/Humanoid")
+#HUMANOID_USD = assets_root + "/Isaac/Robots/IsaacSim/Humanoid/humanoid.usd"
+H1_USD = assets_root + "/Isaac/Robots/Unitree/H1/h1.usd"
+# HUMANOID_USD = assets_root + "/Isaac/Robots/NVIDIA/NovaCarter/nova_carter.usd"
 
-# Wrap humanoid root so we can move it
-humanoid_root = XFormPrim("/World/Humanoid", name="HumanoidRoot")
-_pose_pos = np.zeros((1, 3), dtype=np.float64)
-_pose_quat = np.zeros((1, 4), dtype=np.float64)
+# IMPORTANT: policy example uses a faster physics dt (matches the shipped example)
+world = World(stage_units_in_meters=1.0, physics_dt=1/200, rendering_dt=8/200)
 
-# Spawn pose (adjust to taste)
-pos = np.array([0.0, 0.0, 0.0], dtype=np.float64)
-yaw = 0.0
-_pose_pos[0, :] = pos
-_pose_quat[0, :] = rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False)
-humanoid_root.set_world_poses(positions=_pose_pos, orientations=_pose_quat)
+# Spawn H1 via the policy wrapper (this adds the robot USD and sets it up)
+from isaacsim.robot.policy.examples.robots import H1FlatTerrainPolicy
+
+robot_prim_path = "/World/H1_0"
+h1 = H1FlatTerrainPolicy(
+    prim_path=robot_prim_path,
+    name="H1_0",
+    usd_path=H1_USD,
+    position=np.array([-5.0, -5.0, 1.05]),  # matches the example's z to avoid ground penetration
+)
+
+# Base command the policy consumes: [vx, vy, wz]
+base_command = np.zeros(3, dtype=np.float32)
+
+first_step = True
+reset_needed = False
+
+def on_physics_step(step_size: float):
+    global first_step, reset_needed, base_command
+    if first_step:
+        h1.initialize()
+        first_step = False
+    elif reset_needed:
+        world.reset(True)
+        reset_needed = False
+        first_step = True
+    else:
+        # Policy-controlled locomotion
+        h1.forward(step_size, base_command)
+
+world.reset()
+world.add_physics_callback("policy_step", callback_fn=on_physics_step)
 
 import omni.usd
 from pxr import Usd, UsdGeom, Gf  # IMPORTANT: import AFTER SimulationApp is running
@@ -157,7 +177,7 @@ from pxr import Usd, UsdGeom, Gf  # IMPORTANT: import AFTER SimulationApp is run
 # Camera mount: child prim under humanoid head so it follows humanoid head motion
 stage = omni.usd.get_context().get_stage()
 
-humanoid_root_path = "/World/Humanoid"
+humanoid_root_path = robot_prim_path
 humanoid_prim = stage.GetPrimAtPath(humanoid_root_path)
 
 if not humanoid_prim or not humanoid_prim.IsValid():
@@ -168,8 +188,8 @@ else:
     for prim in Usd.PrimRange(humanoid_prim):
         print(f"[humanoid] {prim.GetPath()}")
 
-cam_mount_path = "/World/Humanoid/chassis_link"
-# cam_mount_path = "/World/Humanoid/mid360_link"
+cam_mount_parent = f"{robot_prim_path}/d435_rgb_module_link"
+cam_mount_path = f"{cam_mount_parent}/eye_mount"
 
 existing = stage.GetPrimAtPath(cam_mount_path)
 if existing and existing.IsValid():
@@ -181,21 +201,21 @@ else:
 # Always (re)set the local transform so reruns are deterministic
 prim = stage.GetPrimAtPath(cam_mount_path)
 xform = UsdGeom.XformCommonAPI(prim)
-xform.SetTranslate(Gf.Vec3d(0.0, 0.0, 0.0))
+xform.SetTranslate(Gf.Vec3d(0.03, 0.0, 0.02))  # forward + head-height (tune if needed)
+# xform.SetRotate(Gf.Vec3f(0.0, 0.0, 90.0), UsdGeom.XformCommonAPI.RotationOrderZXY)
 
 camera = Camera(
     prim_path=cam_mount_path + "/rgb",
     resolution=(args.width, args.height),
-    frequency=60,
+    frequency=10,
 )
 
-world.reset()
 camera.initialize()
 
 camera.set_local_pose(
-    translation=np.array([0.10, 0.00, 0.02]),     # forward, left, up
-    orientation=np.array([1.0, 0.0, 0.0, 0.0]),   # identity (w,x,y,z)
-    camera_axes="world",
+   translation=np.array([0.0, 0.00, 0.0]),     # forward, left, up
+   orientation=np.array([0.5, -0.5, 0.5, -0.5]),   # (w,x,y,z)
+   camera_axes="world",
 )
 
 import math
@@ -293,17 +313,13 @@ try:
         vx, vy = float(lin[0]), float(lin[1])
         wz = float(ang[2])
 
-        # Integrate planar motion + yaw
-        yaw += wz * dt
-        dx_world = (vx * math.cos(yaw) - vy * math.sin(yaw)) * dt
-        dy_world = (vx * math.sin(yaw) + vy * math.cos(yaw)) * dt
+        # Map cmd_vel -> policy base_command: [vx, vy, wz]
+        # Keep it conservative; you can raise limits after it behaves.
+        vx = float(lin[0])
+        vy = float(lin[1])
+        wz = float(ang[2])
 
-        pos[0] += dx_world
-        pos[1] += dy_world
-
-        _pose_pos[0, :] = pos
-        _pose_quat[0, :] = rot_utils.euler_angles_to_quats(np.array([0.0, 0.0, yaw]), degrees=False)
-        humanoid_root.set_world_poses(positions=_pose_pos, orientations=_pose_quat)
+        base_command[:] = np.array([vx, vy, wz], dtype=np.float32)
 
         # Publish JPEG CompressedImage at throttled rate
         if (sim_t - last_pub_t) >= publish_period:
