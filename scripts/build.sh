@@ -11,7 +11,7 @@ export DISCOVERY_IMAGE=${DISCOVERY_IMAGE:-"us-docker.pkg.dev/teknoir/gcr.io/dds-
 
 
 docker buildx build \
-  --platform=linux/amd64 \
+  --platform=linux/arm64/v8,linux/amd64 \
   --push \
   --tag "${ROS_IMAGE}:${BRANCH_NAME}-${SHORT_SHA}" \
   --build-arg ROS_DISTRO="${ROS_DISTRO}" \
@@ -19,7 +19,7 @@ docker buildx build \
   ./docker
 
 docker buildx build \
-  --platform=linux/amd64 \
+  --platform=linux/arm64/v8,linux/amd64 \
   --push \
   --tag "${NVIROS_IMAGE}:${BRANCH_NAME}-${SHORT_SHA}" \
   --build-arg ROS_DISTRO="${ROS_DISTRO}" \
@@ -28,7 +28,7 @@ docker buildx build \
   ./docker
 
 docker buildx build \
-  --platform=linux/amd64 \
+  --platform=linux/arm64/v8,linux/amd64 \
   --push \
   --tag "${DISCOVERY_IMAGE}:${BRANCH_NAME}-${SHORT_SHA}" \
   --build-arg ROS_DISTRO="${ROS_DISTRO}" \

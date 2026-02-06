@@ -18,7 +18,8 @@ import io
 import math
 import sys
 import time
-
+import os
+import cv2
 import numpy as np
 
 # -----------------------------------------------------------------------------
@@ -34,18 +35,113 @@ parser.add_argument("--publish-hz", type=float, default=5.0, help="Compressed im
 parser.add_argument("--jpeg-quality", type=int, default=55, help="JPEG quality (1-95 typical)")
 args, _unknown = parser.parse_known_args()
 
+def is_jetson() -> bool:
+    # Works in most Jetson containers
+    for p in ("/etc/nv_tegra_release", "/proc/device-tree/model"):
+        try:
+            with open(p, "r") as f:
+                s = f.read().lower()
+            if "jetson" in s or "orin" in s or "tegra" in s or "nvidia" in s:
+                return True
+        except Exception:
+            pass
+    return False
+
+ON_JETSON = is_jetson()
+
+config = {
+    "headless": True,
+}
+
+if ON_JETSON:
+    config = {
+        "headless": True,
+        "renderer": "RayTracedLighting", # Force Real-Time (NOT PathTracing)
+        "display_options": 3286, # 3286 = Hide UI elements to save resources
+    }
+
 # -----------------------------------------------------------------------------
 # Isaac Sim must be imported AFTER SimulationApp is created
 # -----------------------------------------------------------------------------
 from isaacsim import SimulationApp
 
-simulation_app = SimulationApp(
-    {
-        "headless": True,
-        # You can add renderer settings if needed; keep minimal by default.
-        # "renderer": "RayTracedLighting",
-    }
-)
+simulation_app = SimulationApp(config)
+
+import carb
+def optimize_headless_render_for_orin():
+    settings = carb.settings.get_settings()
+
+    # 1. Force Real-Time (Raster)
+    settings.set_int("/rtx/rendermode", 0)
+
+    # 2. CRITICAL: Disable NRD (Denoiser) to stop shader compile errors
+    settings.set_bool("/rtx/denoising/enabled", False)
+
+    # 3. Disable DLSS (Causes grain at 640x480, adds overhead)
+    settings.set_bool("/rtx/post/dlss/enabled", False)
+
+    # 4. Disable Ray Traced Shadows (Sampled Lighting)
+    # This forces simple shadow maps, which are much faster and don't require denoising
+    settings.set_bool("/rtx/directLighting/sampledLighting/enabled", False)
+
+    # 5. Disable other heavy features
+    settings.set_bool("/rtx/reflections/enabled", False)
+    settings.set_bool("/rtx/ambientOcclusion/enabled", False)
+    settings.set_bool("/rtx/indirectDiffuse/enabled", False)
+    settings.set_bool("/rtx/translucency/enabled", False)
+
+    # --- FIX FOR PHYSX ERROR 222 ---
+    # Force Physics to run on CPU.
+    # For 1 robot, CPU is faster than the overhead of launching broken GPU kernels.
+    settings.set_bool("/physics/physx/useGpu", False)
+
+    # Optional: Reduce thread count if CPU is busy
+    settings.set_int("/physics/physx/solver/numThreads", 4)
+
+    settings.set_bool("/rtx/hydra/material/texture_compression_enabled", False)
+    settings.set_bool("/rtx/material/compressTextures", False)
+
+    print("--- Optimized for Jetson Orin Headless ---")
+
+# def optimize_headless_render_for_orin():
+#     settings = carb.settings.get_settings()
+#
+#     # 1. FORCE REAL-TIME MODE (Disable Path Tracing)
+#     # 0 = Real-Time, 1 = Path Tracing, 2 = Iray
+#     settings.set_int("/rtx/rendermode", 0)
+#
+#     # 2. ENABLE DLSS (Crucial for Orin AGX)
+#     # Enable DLSS (Deep Learning Super Sampling)
+#     settings.set_bool("/rtx/post/dlss/enabled", True)
+#     # Set DLSS to "Ultra Performance" mode
+#     # 0: Standard, 1: Ultra Performance, 2: Max Performance, 3: Balanced, 4: Max Quality
+#     settings.set_int("/rtx/post/dlss/execMode", 1)
+#
+#     # 3. ELIMINATE "GRAININESS" (Denoising)
+#     # If using Ray Tracing, you need a denoiser.
+#     # If you just want raw speed and don't care about shadows, turn RT off (see step 4).
+#     settings.set_bool("/rtx/hydra/subdivision/refinementLevel", 0)
+#
+#     # 4. DISABLE EXPENSIVE LIGHTING FEATURES (The "Lightweight" setup)
+#     # Disable Ray Traced Reflections
+#     settings.set_bool("/rtx/reflections/enabled", False)
+#     # Disable Ray Traced Ambient Occlusion
+#     settings.set_bool("/rtx/ambientOcclusion/enabled", False)
+#     # Disable Global Illumination (Indirect Lighting)
+#     settings.set_bool("/rtx/indirectDiffuse/enabled", False)
+#     # Disable Translucency
+#     settings.set_bool("/rtx/translucency/enabled", False)
+#
+#     # 5. LIMIT SAMPLES
+#     # Reduce samples per pixel. For RL, 1 sample is often enough if textures are simple.
+#     settings.set_int("/rtx/pathtracing/spp", 1)
+#     settings.set_int("/rtx/pathtracing/totalSpp", 1)
+#
+#     # 6. SHADOWS
+#     # If you don't need accurate shadows, disable them for massive speedup
+#     settings.set_bool("/rtx/directLighting/sampledLighting/enabled", False)
+#
+#     print("--- Optimized for Jetson Orin Headless ---")
 
 # Enable required extensions (support both 5.x and older naming if present)
 from isaacsim.core.utils.extensions import enable_extension
@@ -64,8 +160,14 @@ def _enable_first(ext_names):
 _enable_first(["isaacsim.ros2.bridge", "omni.isaac.ros2_bridge"])
 _enable_first(["isaacsim.sensors.camera", "omni.isaac.sensor"])
 _enable_first(["isaacsim.robot.policy.examples"])
+if ON_JETSON:
+    _enable_first(["omni.kit.compatibility_mode"])
 
 simulation_app.update()
+
+if ON_JETSON:
+    # Call this AFTER simulation_app.update() or initialization
+    optimize_headless_render_for_orin()
 
 # -----------------------------------------------------------------------------
 # Isaac Sim / Omniverse imports
@@ -97,22 +199,25 @@ class CompressedCamPublisher(Node):
         self._pub = self.create_publisher(CompressedImage, topic, qos_profile_sensor_data)
         self._frame_id = frame_id
         self._jpeg_quality = int(jpeg_quality)
+        # self._buf = io.BytesIO() # No longer needed for cv2
 
     def publish_rgb(self, rgb_u8: np.ndarray):
-        """
-        rgb_u8: HxWx3 uint8 RGB image
-        """
         msg = CompressedImage()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = self._frame_id
         msg.format = "jpeg"
 
-        pil_img = Image.fromarray(rgb_u8, mode="RGB")
-        buf = io.BytesIO()
-        pil_img.save(buf, format="JPEG", quality=self._jpeg_quality)
-        msg.data = buf.getvalue()
+        # OPTIMIZATION: Use OpenCV for much faster encoding (C++ backend)
+        # cv2 expects BGR, Isaac gives RGB. Convert or just encode (colors will be swapped if not converted)
+        # For pure speed, we encode as is, but let's do it right:
+        bgr_u8 = cv2.cvtColor(rgb_u8, cv2.COLOR_RGB2BGR)
 
-        self._pub.publish(msg)
+        # cv2.imencode returns (success, encoded_image)
+        success, encoded_img = cv2.imencode('.jpg', bgr_u8, [int(cv2.IMWRITE_JPEG_QUALITY), self._jpeg_quality])
+
+        if success:
+            msg.data = encoded_img.tobytes()
+            self._pub.publish(msg)
 
 # -----------------------------------------------------------------------------
 # Build the scene (warehouse + humanoid + camera)
@@ -125,7 +230,8 @@ if not assets_root:
     )
 
 # Environment USD (documented under /Isaac/Environments/... in asset packs)
-#WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
+# WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/default_environment.usd"
+# WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/warehouse_with_forklifts.usd"
 WAREHOUSE_USD = assets_root + "/Isaac/Environments/Simple_Warehouse/full_warehouse.usd"
 
 print(f"[isaac] loading warehouse: {WAREHOUSE_USD}")
@@ -200,22 +306,59 @@ else:
 
 # Always (re)set the local transform so reruns are deterministic
 prim = stage.GetPrimAtPath(cam_mount_path)
-xform = UsdGeom.XformCommonAPI(prim)
-xform.SetTranslate(Gf.Vec3d(0.03, 0.0, 0.02))  # forward + head-height (tune if needed)
-# xform.SetRotate(Gf.Vec3f(0.0, 0.0, 90.0), UsdGeom.XformCommonAPI.RotationOrderZXY)
+xform_api = UsdGeom.XformCommonAPI(prim)
 
+# Safely remove existing xform ops: delete properties, then clear op order
+xformable = UsdGeom.Xformable(prim)
+for op in xformable.GetOrderedXformOps():
+    # Each xform op is a property on the prim; remove it by name
+    prim.RemoveProperty(op.GetOpName())
+# Also clear the authored order to avoid "incompatible xformable" warnings
+xformable.ClearXformOpOrder()
+
+# Set a clean local transform (meters)
+xform_api.SetTranslate(Gf.Vec3d(0.03, 0.0, 0.02))
+xform_api.SetRotate(Gf.Vec3f(0.0, 0.0, 0.0))
+xform_api.SetScale(Gf.Vec3f(1.0, 1.0, 1.0))
+
+# Camera init remains the same...
 camera = Camera(
     prim_path=cam_mount_path + "/rgb",
     resolution=(args.width, args.height),
-    frequency=10,
+    frequency=args.publish_hz*2,  # Run faster than publish rate for freshness
+)
+camera.initialize()
+for _ in range(3):
+    world.step(render=True)
+
+q = np.array([0.5, -0.5, 0.5, -0.5], dtype=np.float32)
+qw, qx, qy, qz = float(q[0]), float(q[1]), float(q[2]), float(q[3])
+q_gf = Gf.Quatf(qw, Gf.Vec3f(float(qx), float(qy), float(qz)))
+
+# +90° roll using Gf.Rotation with Vec3d; then convert Quatd -> Quatf
+angle_deg = float(-90.0)
+roll_quat_d = Gf.Rotation(Gf.Vec3d(1.0, 0.0, 0.0), angle_deg).GetQuat()  # Quatd
+roll_quat_f = Gf.Quatf(
+    float(roll_quat_d.GetReal()),
+    Gf.Vec3f(
+        float(roll_quat_d.GetImaginary()[0]),
+        float(roll_quat_d.GetImaginary()[1]),
+        float(roll_quat_d.GetImaginary()[2]),
+    ),
 )
 
-camera.initialize()
+# Compose (order matters; this applies roll after current orientation)
+q_fixed_gf = q_gf * roll_quat_f
 
 camera.set_local_pose(
-   translation=np.array([0.0, 0.00, 0.0]),     # forward, left, up
-   orientation=np.array([0.5, -0.5, 0.5, -0.5]),   # (w,x,y,z)
-   camera_axes="world",
+    translation=[0.0, 0.0, 0.0],
+    orientation=[
+        float(q_fixed_gf.GetReal()),
+        float(q_fixed_gf.GetImaginary()[0]),
+        float(q_fixed_gf.GetImaginary()[1]),
+        float(q_fixed_gf.GetImaginary()[2]),
+    ],
+    camera_axes="world",
 )
 
 import math
@@ -297,7 +440,9 @@ print("CTRL+C to stop.")
 
 try:
     while simulation_app.is_running():
-        world.step(render=True)
+        should_render = (sim_t - last_pub_t) >= publish_period
+
+        world.step(render=should_render)
 
         dt = world.get_physics_dt()
         sim_t += dt
@@ -322,7 +467,10 @@ try:
         base_command[:] = np.array([vx, vy, wz], dtype=np.float32)
 
         # Publish JPEG CompressedImage at throttled rate
-        if (sim_t - last_pub_t) >= publish_period:
+        if should_render:
+            # render just-in-time so camera has a fresh frame
+            world.step(render=True)
+
             rgba = camera.get_rgba()
             if rgba is not None and hasattr(rgba, "shape") and rgba.size > 0:
                 rgb = rgba[..., :3]
@@ -335,7 +483,10 @@ try:
                     else:
                         rgb = np.clip(rgb, 0.0, 255.0).astype(np.uint8)
 
+                t0 = time.perf_counter()
                 cam_pub.publish_rgb(rgb)
+                t1 = time.perf_counter()
+                print(f"[pub] t={sim_t:.2f}, encode={1000*(t1-t0):.1f}ms")
 
             last_pub_t = sim_t
 

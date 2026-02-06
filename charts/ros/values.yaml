@@ -13,6 +13,7 @@ defaults:
     tag: jazzy
   replicas: 1
   resources: {}
+  nodeSelector: {}
   hostWorkspacePath: /opt/teknoir/ros/default_ws
   commands: |
     ros2 run demo_nodes_cpp talker
