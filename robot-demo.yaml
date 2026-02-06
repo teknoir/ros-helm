@@ -16,9 +16,13 @@ spec:
 
     instances:
       - name: talker
+        nodeSelector:
+          node-role: ros
         commands:
           - ros2 run demo_nodes_cpp talker
       - name: listener
+        nodeSelector:
+          node-role: sim
         commands:
           - ros2 run demo_nodes_py listener
     

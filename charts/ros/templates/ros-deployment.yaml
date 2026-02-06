@@ -40,6 +40,8 @@ spec:
         app: {{ $.Release.Name }}-{{ .name }}
     spec:
       runtimeClassName: nvidia
+      nodeSelector:
+        {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
       {{- if $instance.nviros }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
@@ -49,8 +51,6 @@ spec:
         fsGroup: 1234
       {{- end }}
       {{- if or (not (empty $instance.artifacts)) $instance.nviros }}
-      nodeSelector:
-        {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}
         - name: init-container-{{ $artifact.name }}

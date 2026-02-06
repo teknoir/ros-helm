@@ -33,6 +33,8 @@ spec:
       labels:
         app: {{ .Release.Name }}-discovery-server
     spec:
+      nodeSelector:
+        {{- toYaml $.Values.discoveryServer.nodeSelector | nindent 8 }}
       containers:
         - name: discovery-server
           image: "{{ $.Values.discoveryServer.image.repository }}:{{ $.Values.defaults.image.tag }}"
@@ -48,5 +50,5 @@ spec:
             capabilities:
               drop: [ "ALL" ]
           resources:
-            {{- toYaml (default $.Values.defaults.resources .resources) | nindent 12 }}
+            {{- toYaml $.Values.discoveryServer.resources | nindent 12 }}
 {{- end }}

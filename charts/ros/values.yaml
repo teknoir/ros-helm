@@ -56,3 +56,4 @@ discoveryServer:
     tag: jazzy-20260125-134403
   replicas: 1
   resources: {}
+  nodeSelector: {}
