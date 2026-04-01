@@ -81,9 +81,9 @@ spec:
             - name: RMW_IMPLEMENTATION
               value: "rmw_zenoh_cpp"
             - name: ZENOH_CONFIG_OVERRIDE
-              value: connect/endpoints=["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]
+              value: 'connect/endpoints=["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]'
             - name: ZENOH_ROUTER_CHECK_ATTEMPTS
-              value: 0
+              value: "0"
           {{- if not (empty $instance.nodePorts) }}
           ports:
             {{- range $port := $instance.nodePorts }}
