@@ -23,7 +23,8 @@ data:
         rest: {
           http_port: "0.0.0.0:{{ .Values.zenohRouter.ports.rest }}"
         },
-        // WebSocket API: browser/Foxglove clients connect to ws://<router>:{{ .Values.zenohRouter.ports.websocket }}
+        // WebSocket API: browser/Foxglove clients connect here
+        // e.g. ws://<node-ip>:{{ .Values.zenohRouter.ports.websocket }}
         remote_api: {
           websocket_port: "0.0.0.0:{{ .Values.zenohRouter.ports.websocket }}"
         }
