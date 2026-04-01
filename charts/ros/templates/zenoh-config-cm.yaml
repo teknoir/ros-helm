@@ -1,41 +1,41 @@
-{{- if .Values.zenohRouter.enabled }}
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: {{ .Release.Name }}-zenoh-config
-  labels:
-    app: {{ .Release.Name }}-zenoh-config
-data:
-  # Router config: loaded by the zenoh-router pod via --config /config/router.json5
-  router.json5: |
-    {
-      mode: "router",
-      listen: {
-        endpoints: ["tcp/0.0.0.0:{{ .Values.zenohRouter.ports.zenoh }}"]
-      },
-      plugins_loading: {
-        enabled: true
-      },
-      plugins: {
-        // HTTP REST API: GET to read, PUT to publish
-        // e.g. curl http://<router>:{{ .Values.zenohRouter.ports.rest }}/my/topic
-        rest: {
-          http_port: "0.0.0.0:{{ .Values.zenohRouter.ports.rest }}"
-        },
-        // WebSocket API: browser/Foxglove clients connect here
-        // e.g. ws://<node-ip>:{{ .Values.zenohRouter.ports.websocket }}
-        remote_api: {
-          websocket_port: "0.0.0.0:{{ .Values.zenohRouter.ports.websocket }}"
-        }
-      }
-    }
-  # Client config: mounted into every standard ROS node pod
-  client.json5: |
-    {
-      mode: "client",
-      connect: {
-        endpoints: ["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]
-      }
-    }
-{{- end }}
+{{/*{{- if .Values.zenohRouter.enabled }}*/}}
+{{/*---*/}}
+{{/*apiVersion: v1*/}}
+{{/*kind: ConfigMap*/}}
+{{/*metadata:*/}}
+{{/*  name: {{ .Release.Name }}-zenoh-config*/}}
+{{/*  labels:*/}}
+{{/*    app: {{ .Release.Name }}-zenoh-config*/}}
+{{/*data:*/}}
+{{/*  # Router config: loaded by the zenoh-router pod via --config /config/router.json5*/}}
+{{/*  router.json5: |*/}}
+{{/*    {*/}}
+{{/*      mode: "router",*/}}
+{{/*      listen: {*/}}
+{{/*        endpoints: ["tcp/0.0.0.0:{{ .Values.zenohRouter.ports.zenoh }}"]*/}}
+{{/*      },*/}}
+{{/*      plugins_loading: {*/}}
+{{/*        enabled: true*/}}
+{{/*      },*/}}
+{{/*      plugins: {*/}}
+{{/*        // HTTP REST API: GET to read, PUT to publish*/}}
+{{/*        // e.g. curl http://<router>:{{ .Values.zenohRouter.ports.rest }}/my/topic*/}}
+{{/*        rest: {*/}}
+{{/*          http_port: "0.0.0.0:{{ .Values.zenohRouter.ports.rest }}"*/}}
+{{/*        },*/}}
+{{/*        // WebSocket API: browser/Foxglove clients connect here*/}}
+{{/*        // e.g. ws://<node-ip>:{{ .Values.zenohRouter.ports.websocket }}*/}}
+{{/*        remote_api: {*/}}
+{{/*          websocket_port: "0.0.0.0:{{ .Values.zenohRouter.ports.websocket }}"*/}}
+{{/*        }*/}}
+{{/*      }*/}}
+{{/*    }*/}}
+{{/*  # Client config: mounted into every standard ROS node pod*/}}
+{{/*  client.json5: |*/}}
+{{/*    {*/}}
+{{/*      mode: "client",*/}}
+{{/*      connect: {*/}}
+{{/*        endpoints: ["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]*/}}
+{{/*      }*/}}
+{{/*    }*/}}
+{{/*{{- end }}*/}}

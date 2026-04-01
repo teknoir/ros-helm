@@ -3,24 +3,24 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ .Release.Name }}-zenoh-router
+  name: {{ $.Release.Name }}-zenoh-router
   labels:
-    app: {{ .Release.Name }}-zenoh-router
+    app: {{ $.Release.Name }}-zenoh-router
 spec:
   type: ClusterIP
   selector:
-    app: {{ .Release.Name }}-zenoh-router
+    app: {{ $.Release.Name }}-zenoh-router
   ports:
     - name: tcp-zenoh
-      port: {{ .Values.zenohRouter.ports.zenoh }}
+      port: {{ $.Values.zenohRouter.ports.zenoh }}
       targetPort: tcp-zenoh
       protocol: TCP
     - name: ws-zenoh
-      port: {{ .Values.zenohRouter.ports.websocket }}
+      port: {{ $.Values.zenohRouter.ports.websocket }}
       targetPort: ws-zenoh
       protocol: TCP
     - name: rest-api
-      port: {{ .Values.zenohRouter.ports.rest }}
+      port: {{ $.Values.zenohRouter.ports.rest }}
       targetPort: rest-api
       protocol: TCP
 
@@ -35,11 +35,11 @@ spec:
   replicas: {{ .Values.zenohRouter.replicas }}
   selector:
     matchLabels:
-      app: {{ .Release.Name }}-zenoh-router
+      app: {{ $.Release.Name }}-zenoh-router
   template:
     metadata:
       labels:
-        app: {{ .Release.Name }}-zenoh-router
+        app: {{ $.Release.Name }}-zenoh-router
     spec:
       nodeSelector:
         {{- toYaml $.Values.zenohRouter.nodeSelector | nindent 8 }}
@@ -49,18 +49,22 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: tcp-zenoh
-              containerPort: {{ .Values.zenohRouter.ports.zenoh }}
+              containerPort: {{ $.Values.zenohRouter.ports.zenoh }}
               protocol: TCP
             - name: ws-zenoh
-              containerPort: {{ .Values.zenohRouter.ports.websocket }}
+              containerPort: {{ $.Values.zenohRouter.ports.websocket }}
               protocol: TCP
             - name: rest-api
-              containerPort: {{ .Values.zenohRouter.ports.rest }}
+              containerPort: {{ $.Values.zenohRouter.ports.rest }}
               protocol: TCP
-          args: ["--config", "/config/router.json5"]
-          volumeMounts:
-            - name: zenoh-config
-              mountPath: /config
+          args:
+           - --cfg=mode:"router"
+           - --cfg=listen:["tcp/0.0.0.0:{{ $.Values.zenohRouter.ports.zenoh }}"]
+           - --cfg=plugins/rest/http_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.rest }}"
+           - --cfg=plugins/remote_api/websocket_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.websocket }}"
+#          volumeMounts:
+#            - name: zenoh-config
+#              mountPath: /config
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -68,8 +72,8 @@ spec:
               drop: [ "ALL" ]
           resources:
             {{- toYaml $.Values.zenohRouter.resources | nindent 12 }}
-      volumes:
-        - name: zenoh-config
-          configMap:
-            name: {{ $.Release.Name }}-zenoh-config
+#      volumes:
+#        - name: zenoh-config
+#          configMap:
+#            name: {{ $.Release.Name }}-zenoh-config
 {{- end }}
