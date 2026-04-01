@@ -1,10 +1,10 @@
 instances:
   - name: talker
-    commands: |
-      ros2 run demo_nodes_cpp talker
+    commands:
+      - ros2 run demo_nodes_cpp talker
   - name: listener
-    commands: |
-      ros2 run demo_nodes_py listener
+    commands:
+      - ros2 run demo_nodes_py listener
 
 # Values possible for ROS instances
 defaults:

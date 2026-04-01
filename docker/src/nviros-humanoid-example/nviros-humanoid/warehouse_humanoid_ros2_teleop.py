@@ -35,30 +35,30 @@ parser.add_argument("--publish-hz", type=float, default=5.0, help="Compressed im
 parser.add_argument("--jpeg-quality", type=int, default=55, help="JPEG quality (1-95 typical)")
 args, _unknown = parser.parse_known_args()
 
-def is_jetson() -> bool:
-    # Works in most Jetson containers
-    for p in ("/etc/nv_tegra_release", "/proc/device-tree/model"):
-        try:
-            with open(p, "r") as f:
-                s = f.read().lower()
-            if "jetson" in s or "orin" in s or "tegra" in s or "nvidia" in s:
-                return True
-        except Exception:
-            pass
-    return False
-
-ON_JETSON = is_jetson()
+# def is_jetson() -> bool:
+#     # Works in most Jetson containers
+#     for p in ("/etc/nv_tegra_release", "/proc/device-tree/model"):
+#         try:
+#             with open(p, "r") as f:
+#                 s = f.read().lower()
+#             if "jetson" in s or "orin" in s or "tegra" in s or "nvidia" in s:
+#                 return True
+#         except Exception:
+#             pass
+#     return False
+#
+# ON_JETSON = is_jetson()
 
 config = {
     "headless": True,
 }
 
-if ON_JETSON:
-    config = {
-        "headless": True,
-        "renderer": "RayTracedLighting", # Force Real-Time (NOT PathTracing)
-        "display_options": 3286, # 3286 = Hide UI elements to save resources
-    }
+# if ON_JETSON:
+#     config = {
+#         "headless": True,
+#         "renderer": "RayTracedLighting", # Force Real-Time (NOT PathTracing)
+#         "display_options": 3286, # 3286 = Hide UI elements to save resources
+#     }
 
 # -----------------------------------------------------------------------------
 # Isaac Sim must be imported AFTER SimulationApp is created
@@ -68,40 +68,40 @@ from isaacsim import SimulationApp
 simulation_app = SimulationApp(config)
 
 import carb
-def optimize_headless_render_for_orin():
-    settings = carb.settings.get_settings()
-
-    # 1. Force Real-Time (Raster)
-    settings.set_int("/rtx/rendermode", 0)
-
-    # 2. CRITICAL: Disable NRD (Denoiser) to stop shader compile errors
-    settings.set_bool("/rtx/denoising/enabled", False)
-
-    # 3. Disable DLSS (Causes grain at 640x480, adds overhead)
-    settings.set_bool("/rtx/post/dlss/enabled", False)
-
-    # 4. Disable Ray Traced Shadows (Sampled Lighting)
-    # This forces simple shadow maps, which are much faster and don't require denoising
-    settings.set_bool("/rtx/directLighting/sampledLighting/enabled", False)
-
-    # 5. Disable other heavy features
-    settings.set_bool("/rtx/reflections/enabled", False)
-    settings.set_bool("/rtx/ambientOcclusion/enabled", False)
-    settings.set_bool("/rtx/indirectDiffuse/enabled", False)
-    settings.set_bool("/rtx/translucency/enabled", False)
-
-    # --- FIX FOR PHYSX ERROR 222 ---
-    # Force Physics to run on CPU.
-    # For 1 robot, CPU is faster than the overhead of launching broken GPU kernels.
-    settings.set_bool("/physics/physx/useGpu", False)
-
-    # Optional: Reduce thread count if CPU is busy
-    settings.set_int("/physics/physx/solver/numThreads", 4)
-
-    settings.set_bool("/rtx/hydra/material/texture_compression_enabled", False)
-    settings.set_bool("/rtx/material/compressTextures", False)
-
-    print("--- Optimized for Jetson Orin Headless ---")
+# def optimize_headless_render_for_orin():
+#     settings = carb.settings.get_settings()
+#
+#     # 1. Force Real-Time (Raster)
+#     settings.set_int("/rtx/rendermode", 0)
+#
+#     # 2. CRITICAL: Disable NRD (Denoiser) to stop shader compile errors
+#     settings.set_bool("/rtx/denoising/enabled", False)
+#
+#     # 3. Disable DLSS (Causes grain at 640x480, adds overhead)
+#     settings.set_bool("/rtx/post/dlss/enabled", False)
+#
+#     # 4. Disable Ray Traced Shadows (Sampled Lighting)
+#     # This forces simple shadow maps, which are much faster and don't require denoising
+#     settings.set_bool("/rtx/directLighting/sampledLighting/enabled", False)
+#
+#     # 5. Disable other heavy features
+#     settings.set_bool("/rtx/reflections/enabled", False)
+#     settings.set_bool("/rtx/ambientOcclusion/enabled", False)
+#     settings.set_bool("/rtx/indirectDiffuse/enabled", False)
+#     settings.set_bool("/rtx/translucency/enabled", False)
+#
+#     # --- FIX FOR PHYSX ERROR 222 ---
+#     # Force Physics to run on CPU.
+#     # For 1 robot, CPU is faster than the overhead of launching broken GPU kernels.
+#     settings.set_bool("/physics/physx/useGpu", False)
+#
+#     # Optional: Reduce thread count if CPU is busy
+#     settings.set_int("/physics/physx/solver/numThreads", 4)
+#
+#     settings.set_bool("/rtx/hydra/material/texture_compression_enabled", False)
+#     settings.set_bool("/rtx/material/compressTextures", False)
+#
+#     print("--- Optimized for Jetson Orin Headless ---")
 
 # def optimize_headless_render_for_orin():
 #     settings = carb.settings.get_settings()
@@ -143,6 +143,30 @@ def optimize_headless_render_for_orin():
 #
 #     print("--- Optimized for Jetson Orin Headless ---")
 
+def optimize_headless_render():
+    settings = carb.settings.get_settings()
+
+    # 1. Force Real-Time (Raster)
+    settings.set_int("/rtx/rendermode", 0)
+
+    # 2. Keep Denoiser enabled to smooth out ray-traced lighting
+    settings.set_bool("/rtx/denoising/enabled", True)
+
+    # 3. Enable DLSS and set to Max Quality for 1080p on Ada generation
+    settings.set_bool("/rtx/post/dlss/enabled", True)
+    settings.set_int("/rtx/post/dlss/execMode", 4)  # 4 = Max Quality
+
+    # 4. AGGRESSIVELY DISABLE VRS, Foveated Rendering, and Dynamic Res
+    settings.set_bool("/rtx/vrs/enabled", False)
+    settings.set_bool("/rtx/vrs/foveated/enabled", False)
+    settings.set_bool("/rtx/foveatedRendering/enabled", False)
+    settings.set_bool("/rtx/post/foveatedRendering/enabled", False)
+    settings.set_bool("/rtx/dynamicRes/enabled", False)
+
+    # 5. Disable other heavy features
+    settings.set_bool("/rtx/reflections/enabled", False)
+
+
 # Enable required extensions (support both 5.x and older naming if present)
 from isaacsim.core.utils.extensions import enable_extension
 
@@ -160,14 +184,16 @@ def _enable_first(ext_names):
 _enable_first(["isaacsim.ros2.bridge", "omni.isaac.ros2_bridge"])
 _enable_first(["isaacsim.sensors.camera", "omni.isaac.sensor"])
 _enable_first(["isaacsim.robot.policy.examples"])
-if ON_JETSON:
-    _enable_first(["omni.kit.compatibility_mode"])
+# if ON_JETSON:
+#     _enable_first(["omni.kit.compatibility_mode"])
 
 simulation_app.update()
 
-if ON_JETSON:
-    # Call this AFTER simulation_app.update() or initialization
-    optimize_headless_render_for_orin()
+# if ON_JETSON:
+#     # Call this AFTER simulation_app.update() or initialization
+#     optimize_headless_render_for_orin()
+
+optimize_headless_render()
 
 # -----------------------------------------------------------------------------
 # Isaac Sim / Omniverse imports
@@ -278,7 +304,7 @@ world.reset()
 world.add_physics_callback("policy_step", callback_fn=on_physics_step)
 
 import omni.usd
-from pxr import Usd, UsdGeom, Gf  # IMPORTANT: import AFTER SimulationApp is running
+from pxr import Usd, UsdGeom, Gf, Sdf  # IMPORTANT: import AFTER SimulationApp is running
 
 # Camera mount: child prim under humanoid head so it follows humanoid head motion
 stage = omni.usd.get_context().get_stage()
@@ -363,13 +389,31 @@ camera.set_local_pose(
 
 import math
 w, h = args.width, args.height
-cx, cy = w / 2.0, h / 2.0
 
 target_fov_deg = 130.0
-fx = (w / 2.0) / math.tan(math.radians(target_fov_deg) / 2.0)
-fy = fx
 
-camera.set_opencv_pinhole_properties(cx=cx, cy=cy, fx=fx, fy=fy, pinhole=[0.0]*12)
+# ----------------------------------------------------------------------------------
+# CRITICAL FIX: Do NOT use set_opencv_pinhole_properties for a 0-distortion camera!
+# It forces a ray-traced physical lens model which causes severe noise at the edges.
+# Instead, set the native USD focal length and horizontal aperture.
+# ----------------------------------------------------------------------------------
+
+# Use a standard 36mm full-frame sensor width
+horizontal_aperture_mm = 36.0
+
+# Calculate focal length for 130 degree FOV
+focal_length_mm = (horizontal_aperture_mm / 2.0) / math.tan(math.radians(target_fov_deg) / 2.0)
+
+camera.set_horizontal_aperture(horizontal_aperture_mm)
+camera.set_vertical_aperture(horizontal_aperture_mm * (h / w))
+camera.set_focal_length(focal_length_mm)
+
+# Disable default cinematic post-processing that artificially adds noise/blur to edges
+camera_prim = stage.GetPrimAtPath(cam_mount_path + "/rgb")
+if camera_prim.IsValid():
+    camera_prim.CreateAttribute("postProcess:chromaticAberration:chromaticAberrationEnabled", Sdf.ValueTypeNames.Bool).Set(False)
+    camera_prim.CreateAttribute("postProcess:vignette:enabled", Sdf.ValueTypeNames.Bool).Set(False)
+    camera_prim.CreateAttribute("postProcess:filmGrain:enabled", Sdf.ValueTypeNames.Bool).Set(False)
 
 # -----------------------------------------------------------------------------
 # ROS2SubscribeTwist graph (teleop via Isaac Sim ROS2 bridge node)
