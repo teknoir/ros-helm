@@ -57,9 +57,7 @@ spec:
             - name: rest-api
               containerPort: {{ .Values.zenohRouter.ports.rest }}
               protocol: TCP
-          env:
-            - name: RMW_ZENOH_ROUTER_CONFIG_URI
-              value: /config/router.json5
+          args: ["--config", "/config/router.json5"]
           volumeMounts:
             - name: zenoh-config
               mountPath: /config

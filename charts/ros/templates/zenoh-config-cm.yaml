@@ -7,20 +7,25 @@ metadata:
   labels:
     app: {{ .Release.Name }}-zenoh-config
 data:
-  # Router config: loaded by the zenoh-router pod
+  # Router config: loaded by the zenoh-router pod via --config /config/router.json5
   router.json5: |
     {
       mode: "router",
       listen: {
-        endpoints: [
-          "tcp/0.0.0.0:{{ .Values.zenohRouter.ports.zenoh }}",
-          "ws/0.0.0.0:{{ .Values.zenohRouter.ports.websocket }}"
-        ]
+        endpoints: ["tcp/0.0.0.0:{{ .Values.zenohRouter.ports.zenoh }}"]
+      },
+      plugins_loading: {
+        enabled: true
       },
       plugins: {
-        // REST API: HTTP GET/PUT for pub/sub (useful for dashboards and integrations)
+        // HTTP REST API: GET to read, PUT to publish
+        // e.g. curl http://<router>:{{ .Values.zenohRouter.ports.rest }}/my/topic
         rest: {
-          http_port: {{ .Values.zenohRouter.ports.rest }}
+          http_port: "0.0.0.0:{{ .Values.zenohRouter.ports.rest }}"
+        },
+        // WebSocket API: browser/Foxglove clients connect to ws://<router>:{{ .Values.zenohRouter.ports.websocket }}
+        remote_api: {
+          websocket_port: "0.0.0.0:{{ .Values.zenohRouter.ports.websocket }}"
         }
       }
     }

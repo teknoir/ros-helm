@@ -50,15 +50,15 @@ defaults:
 zenohRouter:
   enabled: true
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/zenoh-router
-    tag: jazzy-20260401-140825
+    repository: eclipse/zenoh
+    tag: latest
   replicas: 1
   resources: {}
   nodeSelector: {}
   ports:
     zenoh: 7447      # TCP: native Zenoh protocol (ROS nodes, inter-router peering)
-    websocket: 8447  # WebSocket: browser clients, Foxglove, web integrations
-    rest: 8000       # HTTP: REST API for pub/sub via GET/PUT
+    websocket: 10000 # WebSocket: remote_api plugin (browser clients, Foxglove, web integrations)
+    rest: 8000       # HTTP: REST plugin for pub/sub via GET/PUT
   # DDS bridge sidecar injected into nviros pods to bridge Isaac Sim DDS traffic to Zenoh
   ddsBridge:
     image:
