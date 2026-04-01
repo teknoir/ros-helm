@@ -57,14 +57,15 @@ spec:
             - name: rest-api
               containerPort: {{ $.Values.zenohRouter.ports.rest }}
               protocol: TCP
-          args:
-           - --cfg='mode:"router"'
-           - --cfg='listen:["tcp/0.0.0.0:{{ $.Values.zenohRouter.ports.zenoh }}"]'
-           - --cfg='plugins/rest/http_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.rest }}"'
-           - --cfg='plugins/remote_api/websocket_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.websocket }}"'
-#          volumeMounts:
-#            - name: zenoh-config
-#              mountPath: /config
+          args: ["-c", "/config/router.json5"]
+{{/*          args:*/}}
+{{/*           - --cfg='mode:"router"'*/}}
+{{/*           - --cfg='listen:["tcp/0.0.0.0:{{ $.Values.zenohRouter.ports.zenoh }}"]'*/}}
+{{/*           - --cfg='plugins/rest/http_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.rest }}"'*/}}
+{{/*           - --cfg='plugins/remote_api/websocket_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.websocket }}"'*/}}
+          volumeMounts:
+            - name: zenoh-config
+              mountPath: /config
           securityContext:
             allowPrivilegeEscalation: false
             readOnlyRootFilesystem: false
@@ -72,8 +73,8 @@ spec:
               drop: [ "ALL" ]
           resources:
             {{- toYaml $.Values.zenohRouter.resources | nindent 12 }}
-#      volumes:
-#        - name: zenoh-config
-#          configMap:
-#            name: {{ $.Release.Name }}-zenoh-config
+      volumes:
+        - name: zenoh-config
+          configMap:
+            name: {{ $.Release.Name }}-zenoh-config
 {{- end }}
