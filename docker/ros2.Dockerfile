@@ -13,18 +13,14 @@ SHELL ["/bin/bash", "-o", "pipefail", "-c"]
 ENV DEBIAN_FRONTEND=noninteractive
 
 # Kubernetes-friendly defaults:
-# - Explicitly choose Fast DDS RMW (needed if you rely on ROS_DISCOVERY_SERVER).
+# - Use Zenoh RMW for cloud-native, TCP-based discovery (no multicast required).
 # - Allow network comms (not localhost-only).
-# - Prefer UDPv4 only by default (avoid SHM surprises in containers unless you opt in).
-#
-# Notes:
-# - ROS_DISCOVERY_SERVER is NOT set here; the Helm chart sets it to the in-cluster service DNS.
+# - ZENOH_CONFIG is NOT set here; the Helm chart mounts a client config pointing to the in-cluster router.
 ENV \
   ROS_DISTRO=${ROS_DISTRO} \
   ROS_DOMAIN_ID=0 \
   ROS_LOCALHOST_ONLY=0 \
-  RMW_IMPLEMENTATION=rmw_fastrtps_cpp \
-  FASTDDS_BUILTIN_TRANSPORTS=UDPv4 \
+  RMW_IMPLEMENTATION=rmw_zenoh_cpp \
   PYTHONUNBUFFERED=1
 
 # tini for proper signal handling (SIGTERM) + optional demo node for quick smoke tests
@@ -57,6 +53,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
       ros-${ROS_DISTRO}-ament-lint \
       ros-${ROS_DISTRO}-ament-lint-auto \
       ros-${ROS_DISTRO}-ament-lint-common \
+      ros-${ROS_DISTRO}-rmw-zenoh-cpp \
       ros-${ROS_DISTRO}-demo-nodes-cpp \
       ros-${ROS_DISTRO}-demo-nodes-py \
       ros-${ROS_DISTRO}-foxglove-bridge \

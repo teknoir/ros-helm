@@ -1,17 +1,18 @@
 {{- range $instance := .Values.instances }}
+{{- if not $instance.nviros }}
 
 {{- if not (empty $instance.nodePorts) }}
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ $.Release.Name }}-{{ .name }}
+  name: {{ $.Release.Name }}-{{ $instance.name }}
   labels:
-    app: {{ $.Release.Name }}-{{ .name }}
+    app: {{ $.Release.Name }}-{{ $instance.name }}
 spec:
   type: NodePort
   selector:
-    app: {{ $.Release.Name }}-{{ .name }}
+    app: {{ $.Release.Name }}-{{ $instance.name }}
   ports:
     {{- range $port := $instance.nodePorts }}
     - name: {{ $port.name }}
@@ -26,31 +27,23 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ $.Release.Name }}-{{ .name }}
+  name: {{ $.Release.Name }}-{{ $instance.name }}
   labels:
-    app: {{ $.Release.Name }}-{{ .name }}
+    app: {{ $.Release.Name }}-{{ $instance.name }}
 spec:
   replicas: {{ default $.Values.defaults.replicas $instance.replicas }}
   selector:
     matchLabels:
-      app: {{ $.Release.Name }}-{{ .name }}
+      app: {{ $.Release.Name }}-{{ $instance.name }}
   template:
     metadata:
       labels:
-        app: {{ $.Release.Name }}-{{ .name }}
+        app: {{ $.Release.Name }}-{{ $instance.name }}
     spec:
       runtimeClassName: nvidia
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
-      {{- if $instance.nviros }}
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
-      securityContext:
-        runAsUser: 1234
-        runAsGroup: 1234
-        fsGroup: 1234
-      {{- end }}
-      {{- if or (not (empty $instance.artifacts)) $instance.nviros }}
+      {{- if not (empty $instance.artifacts) }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}
         - name: init-container-{{ $artifact.name }}
@@ -70,40 +63,6 @@ spec:
             - name: workspace-volume
               mountPath: /ros_ws
         {{- end }}
-        {{- if $instance.nviros }}
-        - name: change-ownership
-          image: busybox
-          command: ["sh","-lc"]
-          args:
-            - |
-              set -e
-              for d in \
-                /isaac-sim/.cache \
-                /isaac-sim/.nv/ComputeCache \
-                /isaac-sim/.nvidia-omniverse/logs \
-                /isaac-sim/.nvidia-omniverse/config \
-                /isaac-sim/.local/share/ov/data \
-                /isaac-sim/.local/share/ov/pkg
-              do
-                mkdir -p "$d"
-                chown -R 1234:1234 "$d"
-              done
-          securityContext:
-            runAsUser: 0
-          volumeMounts:
-            - name: isaac-cache
-              mountPath: /isaac-sim/.cache
-            - name: isaac-computecache
-              mountPath: /isaac-sim/.nv/ComputeCache
-            - name: isaac-logs
-              mountPath: /isaac-sim/.nvidia-omniverse/logs
-            - name: isaac-config
-              mountPath: /isaac-sim/.nvidia-omniverse/config
-            - name: isaac-data
-              mountPath: /isaac-sim/.local/share/ov/data
-            - name: isaac-pkg
-              mountPath: /isaac-sim/.local/share/ov/pkg
-        {{- end }}
       {{- end }}
       containers:
         - name: ros
@@ -115,46 +74,14 @@ spec:
               {{ . }}
               {{- end }}
           env:
-            # Point ROS 2 nodes at the in-cluster Discovery Server service.
-            # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
-            - name: ROS_DISCOVERY_SERVER
-              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) $instance.discoveryServerAddress | quote }}
-
             - name: ROS_DOMAIN_ID
               value: {{ default "0" $instance.domainId | quote }}
-
-            # Super client mode allows nodes to communicate across different domain IDs and discover all topics in the ROS graph.
-            - name: ROS_SUPER_CLIENT
-              value: {{ default "FALSE" $instance.superClient | quote }}
-
-            # Ensure pods can communicate over the network
             - name: ROS_LOCALHOST_ONLY
               value: "0"
-
-            # Use Fast DDS RMW explicitly
             - name: RMW_IMPLEMENTATION
-              value: "rmw_fastrtps_cpp"
-
-            # Default to UDPv4 only in Kubernetes unless you opt into SHM explicitly  [oai_citation:7‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
-            - name: FASTDDS_BUILTIN_TRANSPORTS
-              value: "UDPv4"
-            {{- if $instance.nviros }}
-            - name: NVIDIA_DRIVER_CAPABILITIES
-              value: "all"
-            - name: NVIDIA_VISIBLE_DEVICES
-              value: "all"
-            # Isaac Sim specific environment variables
-            - name: PRIVACY_CONSENT
-              value: "Y"
-            - name: ACCEPT_EULA
-              value: "Y"
-            - name: PRIVACY_USERID
-              value: "teknoir@teknoir.ai"
-            - name: OMNI_ENV_PRIVACY_USERID
-              value: "teknoir@teknoir.ai"
-            - name: OMNI_ENV_PRIVACY_CONSENT
-              value: "Y"
-            {{- end }}
+              value: "rmw_zenoh_cpp"
+            - name: ZENOH_CONFIG
+              value: /config/client.json5
           {{- if not (empty $instance.nodePorts) }}
           ports:
             {{- range $port := $instance.nodePorts }}
@@ -168,56 +95,16 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /ros_ws
-            {{- if $instance.nviros }}
-            - name: dshm
-              mountPath: /dev/shm
-            - name: isaac-cache
-              mountPath: /isaac-sim/.cache
-            - name: isaac-computecache
-              mountPath: /isaac-sim/.nv/ComputeCache
-            - name: isaac-logs
-              mountPath: /isaac-sim/.nvidia-omniverse/logs
-            - name: isaac-config
-              mountPath: /isaac-sim/.nvidia-omniverse/config
-            - name: isaac-data
-              mountPath: /isaac-sim/.local/share/ov/data
-            - name: isaac-pkg
-              mountPath: /isaac-sim/.local/share/ov/pkg
-            {{- end }}
+            - name: zenoh-config
+              mountPath: /config
       volumes:
         - name: workspace-volume
           hostPath:
-            # directory location on host
             path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
-        {{- if $instance.nviros }}
-        - name: dshm
-          emptyDir:
-            medium: Memory
-            sizeLimit: 8Gi
-        - name: isaac-cache
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/cache/main"
-            type: DirectoryOrCreate
-        - name: isaac-computecache
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/computecache"
-            type: DirectoryOrCreate
-        - name: isaac-logs
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/logs"
-            type: DirectoryOrCreate
-        - name: isaac-config
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/config"
-            type: DirectoryOrCreate
-        - name: isaac-data
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/data"
-            type: DirectoryOrCreate
-        - name: isaac-pkg
-          hostPath:
-            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/pkg"
-            type: DirectoryOrCreate
-          {{- end }}
+        - name: zenoh-config
+          configMap:
+            name: {{ $.Release.Name }}-zenoh-config
+
+{{- end }}
 {{- end }}

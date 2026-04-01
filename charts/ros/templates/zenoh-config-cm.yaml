@@ -1,0 +1,26 @@
+{{- if .Values.zenohRouter.enabled }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-zenoh-config
+  labels:
+    app: {{ .Release.Name }}-zenoh-config
+data:
+  # Router config: loaded by the zenoh-router pod
+  router.json5: |
+    {
+      mode: "router",
+      listen: {
+        endpoints: ["tcp/0.0.0.0:7447"]
+      }
+    }
+  # Client config: mounted into every standard ROS node pod
+  client.json5: |
+    {
+      mode: "client",
+      connect: {
+        endpoints: ["tcp/{{ .Release.Name }}-zenoh-router:7447"]
+      }
+    }
+{{- end }}

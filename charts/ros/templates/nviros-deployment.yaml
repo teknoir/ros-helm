@@ -1,0 +1,212 @@
+{{- range $instance := .Values.instances }}
+{{- if $instance.nviros }}
+
+{{- if not (empty $instance.nodePorts) }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ $.Release.Name }}-{{ $instance.name }}
+  labels:
+    app: {{ $.Release.Name }}-{{ $instance.name }}
+spec:
+  type: NodePort
+  selector:
+    app: {{ $.Release.Name }}-{{ $instance.name }}
+  ports:
+    {{- range $port := $instance.nodePorts }}
+    - name: {{ $port.name }}
+      port: {{ $port.port }}
+      targetPort: {{ $port.targetPort }}
+      nodePort: {{ $port.nodePort }}
+      protocol: {{ default "TCP" $port.protocol }}
+    {{- end }}
+{{- end }}
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ $.Release.Name }}-{{ $instance.name }}
+  labels:
+    app: {{ $.Release.Name }}-{{ $instance.name }}
+spec:
+  replicas: {{ default $.Values.defaults.replicas $instance.replicas }}
+  selector:
+    matchLabels:
+      app: {{ $.Release.Name }}-{{ $instance.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ $.Release.Name }}-{{ $instance.name }}
+    spec:
+      runtimeClassName: nvidia
+      hostNetwork: true
+      dnsPolicy: ClusterFirstWithHostNet
+      nodeSelector:
+        {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
+      securityContext:
+        runAsUser: 1234
+        runAsGroup: 1234
+        fsGroup: 1234
+      initContainers:
+        - name: change-ownership
+          image: busybox
+          command: ["sh","-lc"]
+          args:
+            - |
+              set -e
+              for d in \
+                /isaac-sim/.cache \
+                /isaac-sim/.nv/ComputeCache \
+                /isaac-sim/.nvidia-omniverse/logs \
+                /isaac-sim/.nvidia-omniverse/config \
+                /isaac-sim/.local/share/ov/data \
+                /isaac-sim/.local/share/ov/pkg
+              do
+                mkdir -p "$d"
+                chown -R 1234:1234 "$d"
+              done
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: isaac-cache
+              mountPath: /isaac-sim/.cache
+            - name: isaac-computecache
+              mountPath: /isaac-sim/.nv/ComputeCache
+            - name: isaac-logs
+              mountPath: /isaac-sim/.nvidia-omniverse/logs
+            - name: isaac-config
+              mountPath: /isaac-sim/.nvidia-omniverse/config
+            - name: isaac-data
+              mountPath: /isaac-sim/.local/share/ov/data
+            - name: isaac-pkg
+              mountPath: /isaac-sim/.local/share/ov/pkg
+        {{- range $artifact := $instance.artifacts }}
+        - name: init-container-{{ $artifact.name }}
+          image: "{{ $artifact.image }}:{{ $artifact.tag }}"
+          imagePullPolicy: Always
+          {{- if not (empty $artifact.commands) }}
+          command: [ "/bin/sh", "-c" ]
+          args:
+            - |
+              {{- range $artifact.commands }}
+              {{ . }}
+              {{- end }}
+          {{- end }}
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /ros_ws
+        {{- end }}
+      containers:
+        - name: ros
+          image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - |
+              {{- range (default $.Values.defaults.commands $instance.commands) }}
+              {{ . }}
+              {{- end }}
+          env:
+            - name: ROS_DOMAIN_ID
+              value: {{ default "0" $instance.domainId | quote }}
+            - name: ROS_LOCALHOST_ONLY
+              value: "0"
+            # Isaac Sim requires Fast DDS; the zenoh-dds-bridge sidecar bridges to the Zenoh network
+            - name: RMW_IMPLEMENTATION
+              value: "rmw_fastrtps_cpp"
+            - name: FASTDDS_BUILTIN_TRANSPORTS
+              value: "UDPv4"
+            - name: NVIDIA_DRIVER_CAPABILITIES
+              value: "all"
+            - name: NVIDIA_VISIBLE_DEVICES
+              value: "all"
+            - name: PRIVACY_CONSENT
+              value: "Y"
+            - name: ACCEPT_EULA
+              value: "Y"
+            - name: PRIVACY_USERID
+              value: "teknoir@teknoir.ai"
+            - name: OMNI_ENV_PRIVACY_USERID
+              value: "teknoir@teknoir.ai"
+            - name: OMNI_ENV_PRIVACY_CONSENT
+              value: "Y"
+          {{- if not (empty $instance.nodePorts) }}
+          ports:
+            {{- range $port := $instance.nodePorts }}
+            - name: {{ $port.name }}
+              containerPort: {{ $port.targetPort }}
+              protocol: {{ default "TCP" $port.protocol }}
+            {{- end }}
+          {{- end }}
+          resources:
+            {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
+          volumeMounts:
+            - name: workspace-volume
+              mountPath: /ros_ws
+            - name: dshm
+              mountPath: /dev/shm
+            - name: isaac-cache
+              mountPath: /isaac-sim/.cache
+            - name: isaac-computecache
+              mountPath: /isaac-sim/.nv/ComputeCache
+            - name: isaac-logs
+              mountPath: /isaac-sim/.nvidia-omniverse/logs
+            - name: isaac-config
+              mountPath: /isaac-sim/.nvidia-omniverse/config
+            - name: isaac-data
+              mountPath: /isaac-sim/.local/share/ov/data
+            - name: isaac-pkg
+              mountPath: /isaac-sim/.local/share/ov/pkg
+
+        # zenoh-bridge-ros2dds sidecar: bridges Isaac Sim Fast DDS traffic onto the Zenoh network.
+        # Runs in the same pod (shared hostNetwork) so it can see all local DDS participants.
+        - name: zenoh-dds-bridge
+          image: "{{ $.Values.zenohRouter.ddsBridge.image.repository }}:{{ $.Values.zenohRouter.ddsBridge.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--domain"
+            - {{ default "0" $instance.domainId | quote }}
+            - "--connect"
+            - "tcp/{{ $.Release.Name }}-zenoh-router:7447"
+          resources:
+            {{- toYaml $.Values.zenohRouter.ddsBridge.resources | nindent 12 }}
+
+      volumes:
+        - name: workspace-volume
+          hostPath:
+            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
+            type: DirectoryOrCreate
+        - name: dshm
+          emptyDir:
+            medium: Memory
+            sizeLimit: 8Gi
+        - name: isaac-cache
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/cache/main"
+            type: DirectoryOrCreate
+        - name: isaac-computecache
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/computecache"
+            type: DirectoryOrCreate
+        - name: isaac-logs
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/logs"
+            type: DirectoryOrCreate
+        - name: isaac-config
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/config"
+            type: DirectoryOrCreate
+        - name: isaac-data
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/data"
+            type: DirectoryOrCreate
+        - name: isaac-pkg
+          hostPath:
+            path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/pkg"
+            type: DirectoryOrCreate
+
+{{- end }}
+{{- end }}

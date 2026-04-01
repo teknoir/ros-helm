@@ -34,3 +34,28 @@ helm repo add teknoir-ros https://teknoir.github.io/ros-helm/
 ```bash
 helm install ros teknoir-ros/ros -f values.yaml
 ```
+
+## NVISROS Zenoh sidecar
+
+┌─── nviros pod (hostNetwork)  ────────────────────┐
+│                                                  │
+│  ┌─────────────────┐    DDS (RTPS multicast)     │
+│  │  Isaac Sim      │◄──────────────────────────► │
+│  │  (rmw_fastrtps) │                             │
+│  └─────────────────┘                             │
+│                            ┌──────────────────┐  │
+│                            │ zenoh-dds-bridge │  │
+│                            │   (sidecar)      │  │
+│                            └────────┬─────────┘  │
+└─────────────────────────────────────┼────────────┘
+                                      │ TCP 7447
+                              ┌───────▼────────┐
+                              │  zenoh-router  │  (ClusterIP)
+                              └───────┬────────┘
+                                      │ TCP 7447
+              ┌───────────────────────┼───────────────┐
+              │                       │               │
+       ┌──────▼──────┐        ┌───────▼─────┐   ┌─────▼──────┐
+       │  talker pod │        │ listener pod│   │foxglove pod│
+       │ (rmw_zenoh) │        │ (rmw_zenoh) │   │(rmw_zenoh) │
+       └─────────────┘        └─────────────┘   └────────────┘

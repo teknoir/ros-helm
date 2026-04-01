@@ -1,0 +1,64 @@
+{{- if .Values.zenohRouter.enabled }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-zenoh-router
+  labels:
+    app: {{ .Release.Name }}-zenoh-router
+spec:
+  type: ClusterIP
+  selector:
+    app: {{ .Release.Name }}-zenoh-router
+  ports:
+    - name: tcp-zenoh
+      port: 7447
+      targetPort: tcp-zenoh
+      protocol: TCP
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}-zenoh-router
+  labels:
+    app: {{ .Release.Name }}-zenoh-router
+spec:
+  replicas: {{ .Values.zenohRouter.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-zenoh-router
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-zenoh-router
+    spec:
+      nodeSelector:
+        {{- toYaml $.Values.zenohRouter.nodeSelector | nindent 8 }}
+      containers:
+        - name: zenoh-router
+          image: "{{ $.Values.zenohRouter.image.repository }}:{{ $.Values.zenohRouter.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: tcp-zenoh
+              containerPort: 7447
+              protocol: TCP
+          env:
+            - name: RMW_ZENOH_ROUTER_CONFIG_URI
+              value: /config/router.json5
+          volumeMounts:
+            - name: zenoh-config
+              mountPath: /config
+          securityContext:
+            allowPrivilegeEscalation: false
+            runAsNonRoot: true
+            readOnlyRootFilesystem: false
+            capabilities:
+              drop: [ "ALL" ]
+          resources:
+            {{- toYaml $.Values.zenohRouter.resources | nindent 12 }}
+      volumes:
+        - name: zenoh-config
+          configMap:
+            name: {{ $.Release.Name }}-zenoh-config
+{{- end }}

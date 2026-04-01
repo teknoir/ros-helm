@@ -7,12 +7,12 @@ metadata:
 spec:
   repo: https://teknoir.github.io/ros-helm
   chart: ros
-  version: 0.0.0-beta.21
+  version: 0.0.0-beta.22
   targetNamespace: default
   valuesContent: |-
     defaults:
       image:
-        tag: jazzy-20260205-111041
+        tag: jazzy-20260401-140825
 
     instances:
       - name: talker
@@ -27,7 +27,6 @@ spec:
           - ros2 run demo_nodes_py listener
     
       - name: foxglove-bridge
-        superClient: "TRUE"
         nodeSelector:
           node-role: ros
         commands:

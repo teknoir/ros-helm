@@ -32,14 +32,8 @@ defaults:
 
   # Hidden settings for ROS instances
 
-  # discoveryServerAddress can be used to override the default Discovery Server address
-  # e.g., discoveryServerAddress: "custom-discovery-server:11811"
-
   # domainId can be used to set the ROS_DOMAIN_ID environment variable
   # e.g., domainId: 1
-
-  # superClient can be used to set the ROS_SUPER_CLIENT environment variable
-  # e.g., superClient: "TRUE"
 
   # artifacts can be used to specify init containers for pre-loading data
   # e.g., artifacts:
@@ -49,11 +43,21 @@ defaults:
   #           commands:
   #             - echo "Downloading custom artifact..."
 
-discoveryServer:
+# Zenoh Router: replaces the Fast DDS Discovery Server.
+# Uses TCP (port 7447) instead of UDP, making it far more reliable in Kubernetes.
+# nviros (Isaac Sim) instances automatically get a zenoh-bridge-ros2dds sidecar
+# that bridges their Fast DDS traffic onto the Zenoh network.
+zenohRouter:
   enabled: true
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/dds-discovery
-    tag: jazzy-20260125-134403
+    repository: us-docker.pkg.dev/teknoir/gcr.io/zenoh-router
+    tag: jazzy-20260401-140825
   replicas: 1
   resources: {}
   nodeSelector: {}
+  # DDS bridge sidecar injected into nviros pods to bridge Isaac Sim DDS traffic to Zenoh
+  ddsBridge:
+    image:
+      repository: eclipse/zenoh-bridge-ros2dds
+      tag: latest
+    resources: {}
