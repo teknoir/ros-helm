@@ -80,7 +80,7 @@ spec:
               value: "0"
             - name: RMW_IMPLEMENTATION
               value: "rmw_zenoh_cpp"
-            - name: ZENOH_CONFIG
+            - name: ZENOH_CONFIG_OVERRIDE
               value: /config/client.json5
           {{- if not (empty $instance.nodePorts) }}
           ports:
