@@ -15,8 +15,8 @@ defaults:
   resources: {}
   nodeSelector: {}
   hostWorkspacePath: /opt/teknoir/ros/default_ws
-  commands: |
-    ros2 run demo_nodes_cpp talker
+  commands:
+    - ros2 run demo_nodes_cpp talker
   # K8s NodePort range is typically 30000-32767
   # e.g., nodePorts:
   #        - name: http-fg-bridge
@@ -55,6 +55,10 @@ zenohRouter:
   replicas: 1
   resources: {}
   nodeSelector: {}
+  ports:
+    zenoh: 7447      # TCP: native Zenoh protocol (ROS nodes, inter-router peering)
+    websocket: 8447  # WebSocket: browser clients, Foxglove, web integrations
+    rest: 8000       # HTTP: REST API for pub/sub via GET/PUT
   # DDS bridge sidecar injected into nviros pods to bridge Isaac Sim DDS traffic to Zenoh
   ddsBridge:
     image:

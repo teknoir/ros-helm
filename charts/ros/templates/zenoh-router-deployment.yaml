@@ -12,8 +12,16 @@ spec:
     app: {{ .Release.Name }}-zenoh-router
   ports:
     - name: tcp-zenoh
-      port: 7447
+      port: {{ .Values.zenohRouter.ports.zenoh }}
       targetPort: tcp-zenoh
+      protocol: TCP
+    - name: ws-zenoh
+      port: {{ .Values.zenohRouter.ports.websocket }}
+      targetPort: ws-zenoh
+      protocol: TCP
+    - name: rest-api
+      port: {{ .Values.zenohRouter.ports.rest }}
+      targetPort: rest-api
       protocol: TCP
 
 ---
@@ -41,7 +49,13 @@ spec:
           imagePullPolicy: IfNotPresent
           ports:
             - name: tcp-zenoh
-              containerPort: 7447
+              containerPort: {{ .Values.zenohRouter.ports.zenoh }}
+              protocol: TCP
+            - name: ws-zenoh
+              containerPort: {{ .Values.zenohRouter.ports.websocket }}
+              protocol: TCP
+            - name: rest-api
+              containerPort: {{ .Values.zenohRouter.ports.rest }}
               protocol: TCP
           env:
             - name: RMW_ZENOH_ROUTER_CONFIG_URI
