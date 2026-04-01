@@ -81,7 +81,9 @@ spec:
             - name: RMW_IMPLEMENTATION
               value: "rmw_zenoh_cpp"
             - name: ZENOH_CONFIG_OVERRIDE
-              value: /config/client.json5
+              value: connect/endpoints=["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]
+            - name: ZENOH_ROUTER_CHECK_ATTEMPTS
+              value: 0
           {{- if not (empty $instance.nodePorts) }}
           ports:
             {{- range $port := $instance.nodePorts }}
@@ -95,16 +97,16 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /ros_ws
-            - name: zenoh-config
-              mountPath: /config
+{{/*            - name: zenoh-config*/}}
+{{/*              mountPath: /config*/}}
       volumes:
         - name: workspace-volume
           hostPath:
             path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
-        - name: zenoh-config
-          configMap:
-            name: {{ $.Release.Name }}-zenoh-config
+{{/*        - name: zenoh-config*/}}
+{{/*          configMap:*/}}
+{{/*            name: {{ $.Release.Name }}-zenoh-config*/}}
 
 {{- end }}
 {{- end }}
