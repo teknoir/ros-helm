@@ -15,6 +15,10 @@ spec:
       port: {{ $.Values.zenohRouter.ports.zenoh }}
       targetPort: tcp-zenoh
       protocol: TCP
+    - name: tcp-scout
+      port: 7446
+      targetPort: tcp-scout
+      protocol: TCP
     - name: ws-zenoh
       port: {{ $.Values.zenohRouter.ports.websocket }}
       targetPort: ws-zenoh
@@ -51,6 +55,9 @@ spec:
             - name: tcp-zenoh
               containerPort: {{ $.Values.zenohRouter.ports.zenoh }}
               protocol: TCP
+            - name: tcp-scout
+              containerPort: 7446
+              protocol: TCP
             - name: ws-zenoh
               containerPort: {{ $.Values.zenohRouter.ports.websocket }}
               protocol: TCP
@@ -58,11 +65,6 @@ spec:
               containerPort: {{ $.Values.zenohRouter.ports.rest }}
               protocol: TCP
           args: ["-c", "/config/router.json5"]
-{{/*          args:*/}}
-{{/*           - --cfg='mode:"router"'*/}}
-{{/*           - --cfg='listen:["tcp/0.0.0.0:{{ $.Values.zenohRouter.ports.zenoh }}"]'*/}}
-{{/*           - --cfg='plugins/rest/http_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.rest }}"'*/}}
-{{/*           - --cfg='plugins/remote_api/websocket_port:"0.0.0.0:{{ $.Values.zenohRouter.ports.websocket }}"'*/}}
           volumeMounts:
             - name: zenoh-config
               mountPath: /config
