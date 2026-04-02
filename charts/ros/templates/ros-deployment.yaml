@@ -78,8 +78,12 @@ spec:
               value: {{ default "0" $instance.domainId | quote }}
             - name: ROS_LOCALHOST_ONLY
               value: "0"
+{{/*            - name: RMW_IMPLEMENTATION*/}}
+{{/*              value: "rmw_zenoh_cpp"*/}}
             - name: RMW_IMPLEMENTATION
-              value: "rmw_zenoh_cpp"
+              value: "rmw_fastrtps_cpp"
+            - name: FASTDDS_BUILTIN_TRANSPORTS
+              value: "UDPv4"
             - name: ZENOH_CONFIG_OVERRIDE
               value: "connect/endpoints=[\"tcp/{{ $.Release.Name }}-zenoh-router:{{ $.Values.zenohRouter.ports.zenoh }}\"]"
             - name: ZENOH_ROUTER_CHECK_ATTEMPTS
@@ -97,16 +101,26 @@ spec:
           volumeMounts:
             - name: workspace-volume
               mountPath: /ros_ws
-{{/*            - name: zenoh-config*/}}
-{{/*              mountPath: /config*/}}
+
+        # zenoh-bridge-ros2dds sidecar: bridges Isaac Sim Fast DDS traffic onto the Zenoh network.
+        # Runs in the same pod (shared hostNetwork) so it can see all local DDS participants.
+        - name: zenoh-dds-bridge
+          image: "{{ $.Values.zenohRouter.ddsBridge.image.repository }}:{{ $.Values.zenohRouter.ddsBridge.image.tag }}"
+          imagePullPolicy: IfNotPresent
+          args:
+            - "--domain"
+            - {{ default "0" $instance.domainId | quote }}
+            - "--connect"
+            - "tcp/{{ $.Release.Name }}-zenoh-router:7447"
+            - "--no-type-hash"
+          resources:
+            {{- toYaml $.Values.zenohRouter.ddsBridge.resources | nindent 12 }}
+
       volumes:
         - name: workspace-volume
           hostPath:
             path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
-{{/*        - name: zenoh-config*/}}
-{{/*          configMap:*/}}
-{{/*            name: {{ $.Release.Name }}-zenoh-config*/}}
 
 {{- end }}
 {{- end }}

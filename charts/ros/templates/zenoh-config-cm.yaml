@@ -26,12 +26,4 @@ data:
         }
       }
     }
-  # Client config: mounted into every standard ROS node pod
-  client.json5: |
-    {
-      mode: "client",
-      connect: {
-        endpoints: ["tcp/{{ .Release.Name }}-zenoh-router:{{ .Values.zenohRouter.ports.zenoh }}"]
-      }
-    }
 {{- end }}

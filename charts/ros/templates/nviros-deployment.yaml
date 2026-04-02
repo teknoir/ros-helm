@@ -118,7 +118,7 @@ spec:
             - name: RMW_IMPLEMENTATION
               value: "rmw_fastrtps_cpp"
             - name: FASTDDS_BUILTIN_TRANSPORTS
-              value: "UDPv4"
+              value: "SHM"
             - name: NVIDIA_DRIVER_CAPABILITIES
               value: "all"
             - name: NVIDIA_VISIBLE_DEVICES
@@ -171,6 +171,7 @@ spec:
             - {{ default "0" $instance.domainId | quote }}
             - "--connect"
             - "tcp/{{ $.Release.Name }}-zenoh-router:7447"
+            - "--no-type-hash"
           resources:
             {{- toYaml $.Values.zenohRouter.ddsBridge.resources | nindent 12 }}
 

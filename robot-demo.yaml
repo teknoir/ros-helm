@@ -52,6 +52,8 @@ spec:
           node-role: sim
         commands:
           - export TURTLEBOT3_MODEL=waffle_pi
+          # This dummy subscriber tricks Gazebo into waking up the camera topic!
+          - ros2 topic hz /camera/image_raw/compressed > /dev/null &    
           - ros2 launch tb3_headless_launch tb3_house_headless.launch.py use_sim_time:=True
         artifacts:
           - name: tb3-headless
