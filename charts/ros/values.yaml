@@ -9,8 +9,8 @@ instances:
 # Values possible for ROS instances
 defaults:
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/ros
-    tag: jazzy
+    repository: docker pull ghcr.io/teknoir/ros-helm/ros2
+    tag: latest
   replicas: 1
   resources: {}
   nodeSelector: {}
@@ -50,8 +50,8 @@ defaults:
 zenohRouter:
   enabled: true
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/zenoh-router
-    tag: "1.8.0"
+    repository: ghcr.io/teknoir/ros-helm/zenoh-router
+    tag: latest
   replicas: 1
   resources: {}
   nodeSelector: {}
