@@ -1,5 +1,5 @@
 ARG ROS_DISTRO=jazzy
-FROM us-docker.pkg.dev/teknoir/gcr.io/nviros:5.1.0
+FROM nvcr.io/nvidia/isaac-sim:5.1.0
 
 ENV \
   ROS_DISTRO=jazzy \
