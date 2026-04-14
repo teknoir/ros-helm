@@ -9,7 +9,7 @@ instances:
 # Values possible for ROS instances
 defaults:
   image:
-    repository: docker pull ghcr.io/teknoir/ros-helm/ros2
+    repository: ghcr.io/teknoir/ros-helm/ros2
     tag: latest
   replicas: 1
   resources: {}
