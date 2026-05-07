@@ -40,7 +40,6 @@ spec:
       labels:
         app: {{ $.Release.Name }}-{{ $instance.name }}
     spec:
-      runtimeClassName: nvidia
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
       {{- if not (empty $instance.artifacts) }}
