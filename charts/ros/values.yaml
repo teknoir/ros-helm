@@ -16,6 +16,7 @@ defaults:
   nodeSelector: {}
   imagePullSecrets: []
   hostWorkspacePath: /opt/teknoir/ros/default_ws
+  command: []
   commands:
     - ros2 run demo_nodes_cpp talker
   # K8s NodePort range is typically 30000-32767

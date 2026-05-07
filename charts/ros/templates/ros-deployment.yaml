@@ -69,6 +69,10 @@ spec:
         - name: ros
           image: "{{ default $.Values.defaults.image.repository (default (dict "repository" $.Values.defaults.image.repository) $instance.image).repository }}:{{ default $.Values.defaults.image.tag (default (dict "tag" $.Values.defaults.image.tag) $instance.image).tag }}"
           imagePullPolicy: IfNotPresent
+          {{- if not (empty (default $.Values.defaults.command $instance.command)) }}
+          command:
+            {{- toYaml (default $.Values.defaults.command $instance.command) | nindent 12 }}
+          {{- end }}
           args:
             - |
               {{- range (default $.Values.defaults.commands $instance.commands) }}
