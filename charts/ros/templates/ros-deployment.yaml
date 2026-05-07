@@ -42,6 +42,8 @@ spec:
     spec:
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
+      imagePullSecrets:
+        {{- toYaml (default $.Values.defaults.imagePullSecrets $instance.imagePullSecrets) | nindent 8 }}
       {{- if not (empty $instance.artifacts) }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}
