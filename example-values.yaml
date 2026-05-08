@@ -1,7 +1,12 @@
 instances:
   - name: talker
+    command:
+      - "/bin/bash"
+      - "-c"
     commands:
-      - ros2 run demo_nodes_cpp talker
+      - |-
+        source /opt/persona/manipulation/local_setup.sh
+        ros2 run demo_nodes_cpp talker
   - name: listener
     commands:
       - ros2 run demo_nodes_py listener

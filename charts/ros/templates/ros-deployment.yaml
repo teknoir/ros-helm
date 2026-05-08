@@ -76,7 +76,7 @@ spec:
           args:
             - |
 {{- range (default $.Values.defaults.commands $instance.commands) }}
-{{ . | indent 18 }}
+{{ . | indent 14 }}
 {{- end }}
           env:
             - name: ROS_DOMAIN_ID
