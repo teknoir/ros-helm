@@ -112,9 +112,9 @@ spec:
           {{- end }}
           args:
             - |
-              {{- range (default $.Values.defaults.commands $instance.commands) }}
-              {{ . }}
-              {{- end }}
+{{- range (default $.Values.defaults.commands $instance.commands) }}
+{{ . | indent 18 }}
+{{- end }}
           env:
             - name: ROS_DOMAIN_ID
               value: {{ default "0" $instance.domainId | quote }}
