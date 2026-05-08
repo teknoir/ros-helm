@@ -15,7 +15,6 @@ defaults:
   resources: {}
   nodeSelector: {}
   imagePullSecrets: []
-  hostWorkspacePath: /opt/teknoir/ros/default_ws
   command: []
   commands:
     - ros2 run demo_nodes_cpp talker
@@ -31,6 +30,9 @@ defaults:
   # NVIROS
   nviros: false
   hostIsaacSimPath: /opt/teknoir/ros/default-isaac-sim
+
+  volumeMounts: []
+  volumes: []
 
   # Hidden settings for ROS instances
 

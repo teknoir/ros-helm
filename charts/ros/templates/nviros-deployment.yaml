@@ -98,9 +98,10 @@ spec:
           {{- end }}
           securityContext:
             runAsUser: 0
+          {{- if or $.Values.defaults.volumeMounts $instance.volumeMounts }}
           volumeMounts:
-            - name: workspace-volume
-              mountPath: /ros_ws
+            {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
+          {{- end }}
         {{- end }}
       containers:
         - name: ros
@@ -150,8 +151,6 @@ spec:
           resources:
             {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
           volumeMounts:
-            - name: workspace-volume
-              mountPath: /ros_ws
             - name: dshm
               mountPath: /dev/shm
             - name: isaac-cache
@@ -166,6 +165,9 @@ spec:
               mountPath: /isaac-sim/.local/share/ov/data
             - name: isaac-pkg
               mountPath: /isaac-sim/.local/share/ov/pkg
+            {{- if or $.Values.defaults.volumeMounts $instance.volumeMounts }}
+            {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
+            {{- end }}
 
         # zenoh-bridge-ros2dds sidecar: bridges Isaac Sim Fast DDS traffic onto the Zenoh network.
         # Runs in the same pod (shared hostNetwork) so it can see all local DDS participants.
@@ -182,10 +184,6 @@ spec:
             {{- toYaml $.Values.zenohRouter.ddsBridge.resources | nindent 12 }}
 
       volumes:
-        - name: workspace-volume
-          hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
-            type: DirectoryOrCreate
         - name: dshm
           emptyDir:
             medium: Memory
@@ -214,6 +212,9 @@ spec:
           hostPath:
             path: "{{ default $.Values.defaults.hostIsaacSimPath $instance.hostIsaacSimPath }}/pkg"
             type: DirectoryOrCreate
+        {{- if or $.Values.defaults.volumes $instance.volumes }}
+        {{- toYaml (default $.Values.defaults.volumes $instance.volumes) | nindent 8 }}
+        {{- end }}
 
 {{- end }}
 {{- end }}

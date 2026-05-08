@@ -60,9 +60,10 @@ spec:
           {{- end }}
           securityContext:
             runAsUser: 0
+          {{- if or $.Values.defaults.volumeMounts $instance.volumeMounts }}
           volumeMounts:
-            - name: workspace-volume
-              mountPath: /ros_ws
+            {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
+          {{- end }}
         {{- end }}
       {{- end }}
       containers:
@@ -99,14 +100,14 @@ spec:
           {{- end }}
           resources:
             {{- toYaml (default $.Values.defaults.resources $instance.resources) | nindent 12 }}
+          {{- if or $.Values.defaults.volumeMounts $instance.volumeMounts }}
           volumeMounts:
-            - name: workspace-volume
-              mountPath: /ros_ws
+            {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
+          {{- end }}
+      {{- if or $.Values.defaults.volumes $instance.volumes }}
       volumes:
-        - name: workspace-volume
-          hostPath:
-            path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
-            type: DirectoryOrCreate
+        {{- toYaml (default $.Values.defaults.volumes $instance.volumes) | nindent 8 }}
+      {{- end }}
 
 {{- end }}
 {{- end }}
