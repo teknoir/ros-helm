@@ -40,10 +40,14 @@ spec:
       labels:
         app: {{ $.Release.Name }}-{{ $instance.name }}
     spec:
+      hostNetwork: {{ if hasKey $instance "hostNetwork" }}{{ $instance.hostNetwork }}{{ else }}{{ default false $.Values.defaults.hostNetwork }}{{ end }}
+      dnsPolicy: {{ default $.Values.defaults.dnsPolicy $instance.dnsPolicy }}
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
       imagePullSecrets:
         {{- toYaml (default $.Values.defaults.imagePullSecrets $instance.imagePullSecrets) | nindent 8 }}
+      securityContext:
+        {{- toYaml (default $.Values.defaults.securityContext $instance.securityContext) | nindent 8 }}
       {{- if not (empty $instance.artifacts) }}
       initContainers:
         {{- range $artifact := $instance.artifacts }}

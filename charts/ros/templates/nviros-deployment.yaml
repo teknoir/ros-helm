@@ -41,16 +41,20 @@ spec:
         app: {{ $.Release.Name }}-{{ $instance.name }}
     spec:
       runtimeClassName: nvidia
-      hostNetwork: true
-      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: {{ if hasKey $instance "hostNetwork" }}{{ $instance.hostNetwork }}{{ else }}{{ default true $.Values.defaults.hostNetwork }}{{ end }}
+      dnsPolicy: {{ default "ClusterFirstWithHostNet" (default $.Values.defaults.dnsPolicy $instance.dnsPolicy) }}
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
       imagePullSecrets:
         {{- toYaml (default $.Values.defaults.imagePullSecrets $instance.imagePullSecrets) | nindent 8 }}
       securityContext:
+        {{- if or $.Values.defaults.securityContext $instance.securityContext }}
+        {{- toYaml (default $.Values.defaults.securityContext $instance.securityContext) | nindent 8 }}
+        {{- else }}
         runAsUser: 1234
         runAsGroup: 1234
         fsGroup: 1234
+        {{- end }}
       initContainers:
         - name: change-ownership
           image: busybox

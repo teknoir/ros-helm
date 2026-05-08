@@ -25,6 +25,10 @@ defaults:
   #          targetPort: 8765
   #          nodePort: 31765
   nodePorts: []
+  
+  securityContext: {}
+  dnsPolicy: ClusterFirst
+  hostNetwork: false
 
 
   # NVIROS
