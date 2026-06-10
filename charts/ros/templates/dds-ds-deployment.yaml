@@ -37,7 +37,7 @@ spec:
         {{- toYaml $.Values.discoveryServer.nodeSelector | nindent 8 }}
       containers:
         - name: discovery-server
-          image: "{{ $.Values.discoveryServer.image.repository }}:{{ $.Values.defaults.image.tag }}"
+          image: "{{ $.Values.discoveryServer.image.repository }}:{{ $.Values.discoveryServer.image.tag }}"
           imagePullPolicy: IfNotPresent
           ports:
             - name: udp-ds

@@ -125,15 +125,14 @@ spec:
             {{- if or $.Values.defaults.volumeMounts $instance.volumeMounts }}
             {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
             {{- end }}
-      {{- if or $.Values.defaults.volumes $instance.volumes }}
       volumes:
         - name: workspace-volume
           hostPath:
             # directory location on host
             path: "{{ default $.Values.defaults.hostWorkspacePath $instance.hostWorkspacePath }}"
             type: DirectoryOrCreate
+        {{- if or $.Values.defaults.volumes $instance.volumes }}
         {{- toYaml (default $.Values.defaults.volumes $instance.volumes) | nindent 8 }}
-      {{- end }}
-
-          {{- end }}
+        {{- end }}
+{{- end }}
 {{- end }}

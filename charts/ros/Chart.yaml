@@ -1,7 +1,8 @@
 apiVersion: v2
 name: ros
 description: Chart to install ROS
+icon: https://www.ros.org/wp-content/uploads/2013/10/ros_logo.png
 
 type: application
-version: 0.0.0-dds-beta.5
+version: 0.0.0-dds-beta.6
 appVersion: 0.0.1

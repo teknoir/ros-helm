@@ -66,3 +66,11 @@ discoveryServer:
   replicas: 1
   resources: {}
   nodeSelector: {}
+
+zenohRouter:
+  ddsBridge:
+    enabled: false
+    image:
+      repository: zenoh/zenoh-bridge-ros2dds
+      tag: latest
+    resources: {}

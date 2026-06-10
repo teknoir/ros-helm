@@ -119,6 +119,11 @@ spec:
           securityContext:
             {{- toYaml (default $.Values.defaults.securityContext $instance.securityContext) | nindent 12 }}
           env:
+            # Point ROS 2 nodes at the in-cluster Discovery Server service.
+            # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
+            - name: ROS_DISCOVERY_SERVER
+              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) $instance.discoveryServerAddress | quote }}
+
             - name: ROS_DOMAIN_ID
               value: {{ default "0" $instance.domainId | quote }}
             - name: ROS_LOCALHOST_ONLY
@@ -171,6 +176,11 @@ spec:
             {{- toYaml (default $.Values.defaults.volumeMounts $instance.volumeMounts) | nindent 12 }}
             {{- end }}
 
+        {{- $zenohEnabled := $.Values.zenohRouter.ddsBridge.enabled -}}
+        {{- if hasKey $instance "zenohDdsBridge" -}}
+          {{- $zenohEnabled = $instance.zenohDdsBridge -}}
+        {{- end -}}
+        {{- if $zenohEnabled }}
         # zenoh-bridge-ros2dds sidecar: bridges Isaac Sim Fast DDS traffic onto the Zenoh network.
         # Runs in the same pod (shared hostNetwork) so it can see all local DDS participants.
         - name: zenoh-dds-bridge
@@ -184,6 +194,7 @@ spec:
             - "--no-type-hash"
           resources:
             {{- toYaml $.Values.zenohRouter.ddsBridge.resources | nindent 12 }}
+        {{- end }}
 
       volumes:
         - name: dshm
