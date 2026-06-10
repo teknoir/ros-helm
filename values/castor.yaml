@@ -1,0 +1,68 @@
+defaults:
+  imagePullSecrets:
+    - name: persona-harbor-pullsecret
+  command:
+    - "/bin/bash"
+    - "-c"
+instances:
+  - name: talker
+    domainId: "4404"
+    image:
+      repository: persona-nas1.chipmunk-tuna.ts.net/persona/manipulation
+      tag: jazzy-py3.12-dev-ubuntu24.04
+    nodeSelector:
+      kubernetes.io/hostname: teknoir-master
+    commands:
+      - |-
+        sudo apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-rmw-zenoh-cpp
+        colcon clean workspace -y
+        #colcon build --packages-up-to franka_node
+        #source ~/ws_colcon/install/setup.bash
+        #ros2 launch franka_node franka_node.launch.py robot:=castor
+        source /opt/persona/manipulation/setup.bash
+        ros2 run demo_nodes_cpp talker
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+    securityContext:
+      capabilities:
+        add:
+          - SYS_NICE
+          - IPC_LOCK
+    volumeMounts:
+      - name: manipulation-src
+        mountPath: /home/persona/ws_colcon/src/manipulation
+    volumes:
+      - name: manipulation-src
+        hostPath:
+          path: /home/persona/persona
+          type: DirectoryOrCreate
+  - name: listener
+    domainId: "4404"
+    image:
+      repository: persona-nas1.chipmunk-tuna.ts.net/persona/manipulation
+      tag: jazzy-py3.12-dev-ubuntu24.04
+    nodeSelector:
+      kubernetes.io/hostname: teknoir-master
+    commands:
+      - |-
+        sudo apt-get install -y --no-install-recommends ros-${ROS_DISTRO}-rmw-zenoh-cpp
+        colcon clean workspace -y
+        #colcon build --packages-up-to franka_node
+        #source ~/ws_colcon/install/setup.bash
+        source /opt/persona/manipulation/setup.bash
+        ros2 run demo_nodes_py listener
+    hostNetwork: true
+    dnsPolicy: ClusterFirstWithHostNet
+    securityContext:
+      capabilities:
+        add:
+          - SYS_NICE
+          - IPC_LOCK
+    volumeMounts:
+      - name: manipulation-src
+        mountPath: /home/persona/ws_colcon/src/manipulation
+    volumes:
+      - name: manipulation-src
+        hostPath:
+          path: /home/persona/persona
+          type: DirectoryOrCreate

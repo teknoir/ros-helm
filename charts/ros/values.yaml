@@ -9,11 +9,12 @@ instances:
 # Values possible for ROS instances
 defaults:
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/ros
-    tag: jazzy
+    repository: ghcr.io/teknoir/ros-helm/ros2
+    tag: dds-beta
   replicas: 1
   resources: {}
   nodeSelector: {}
+  imagePullSecrets: []
   hostWorkspacePath: /opt/teknoir/ros/default_ws
   commands: |
     ros2 run demo_nodes_cpp talker

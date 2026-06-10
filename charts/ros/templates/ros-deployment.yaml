@@ -42,6 +42,8 @@ spec:
       runtimeClassName: nvidia
       nodeSelector:
         {{- toYaml (default $.Values.defaults.nodeSelector $instance.nodeSelector) | nindent 8 }}
+      imagePullSecrets:
+        {{- toYaml (default $.Values.defaults.imagePullSecrets $instance.imagePullSecrets) | nindent 8 }}
       {{- if $instance.nviros }}
       hostNetwork: true
       dnsPolicy: ClusterFirstWithHostNet
