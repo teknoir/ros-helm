@@ -84,14 +84,27 @@ spec:
           securityContext:
             {{- toYaml (default $.Values.defaults.securityContext $instance.securityContext) | nindent 12 }}
           env:
+            # Point ROS 2 nodes at the in-cluster Discovery Server service.
+            # Fast DDS supports DNS names and semicolon-separated server lists in ROS_DISCOVERY_SERVER.  [oai_citation:6‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
+            - name: ROS_DISCOVERY_SERVER
+              value: {{ default  (printf "%s-discovery-server:11811" $.Release.Name) $instance.discoveryServerAddress | quote }}
+
             - name: ROS_DOMAIN_ID
               value: {{ default "0" $instance.domainId | quote }}
+
+            # Super client mode allows nodes to communicate across different domain IDs and discover all topics in the ROS graph.
+            - name: ROS_SUPER_CLIENT
+              value: {{ default "FALSE" $instance.superClient | quote }}
+
+            # Ensure pods can communicate over the network
             - name: ROS_LOCALHOST_ONLY
               value: "0"
 
             # Use Fast DDS RMW explicitly
             - name: RMW_IMPLEMENTATION
               value: "rmw_fastrtps_cpp"
+
+            # Default to UDPv4 only in Kubernetes unless you opt into SHM explicitly  [oai_citation:7‡fast-dds.docs.eprosima.com](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html)
             - name: FASTDDS_BUILTIN_TRANSPORTS
               value: "UDPv4"
           {{- if not (empty $instance.nodePorts) }}
