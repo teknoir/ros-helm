@@ -22,7 +22,7 @@ jobs:
           - name: kitti-bag
             context: docker/bags/kitti-bag
             file: docker/bags/kitti-bag/Dockerfile
-            platforms: linux/amd64
+            platforms: linux/amd64,linux/arm64/v8
           - name: nviros-humanoid-example
             context: docker/src/nviros-humanoid-example
             file: docker/src/nviros-humanoid-example/Dockerfile
