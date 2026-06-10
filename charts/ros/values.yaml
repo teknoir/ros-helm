@@ -15,6 +15,7 @@ defaults:
   resources: {}
   nodeSelector: {}
   imagePullSecrets: []
+  hostWorkspacePath: /opt/teknoir/ros/default_ws
   command: []
   commands:
     - ros2 run demo_nodes_cpp talker
