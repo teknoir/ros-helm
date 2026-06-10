@@ -53,8 +53,8 @@ defaults:
 discoveryServer:
   enabled: true
   image:
-    repository: us-docker.pkg.dev/teknoir/gcr.io/dds-discovery
-    tag: jazzy-20260125-134403
+    repository: ghcr.io/teknoir/ros-helm/discovery
+    tag: dds-beta
   replicas: 1
   resources: {}
   nodeSelector: {}
