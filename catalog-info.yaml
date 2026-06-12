@@ -1,0 +1,209 @@
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: ROS2 App
+  name: ros2-app
+  namespace: teknoir
+  description: The Robot Operating System (ROS2)
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: app
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dependsOn:
+    - component:teknoir/ghcr.io.teknoir.ros-helm.ros2
+    - component:teknoir/ghcr.io.teknoir.ros-helm.kitti-bag
+    - component:teknoir/ghcr.io.teknoir.ros-helm.zenoh-router
+    - component:teknoir/ghcr.io.teknoir.ros-helm.nviros
+    - component:teknoir/ghcr.io.teknoir.ros-helm.discovery
+    - component:teknoir/ghcr.io.teknoir.ros-helm.tb3-headless-launch
+    - component:teknoir/ghcr.io.teknoir.ros-helm.nviros-humanoid-example
+    - component:teknoir/ros2-helm
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: ROS2 HelmChart
+  name: ros2-helm
+  namespace: teknoir
+  description: The Robot Operating System (ROS2) Chart
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'teknoir.org/helm-registry': teknoir.github.io/ros-helm
+    'teknoir.org/helmchart': ros
+spec:
+  type: helmchart
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dependsOn:
+    - component:teknoir/ghcr.io.teknoir.ros-helm.ros2
+    - component:teknoir/ghcr.io.teknoir.ros-helm.kitti-bag
+    - component:teknoir/ghcr.io.teknoir.ros-helm.zenoh-router
+    - component:teknoir/ghcr.io.teknoir.ros-helm.nviros
+    - component:teknoir/ghcr.io.teknoir.ros-helm.discovery
+    - component:teknoir/ghcr.io.teknoir.ros-helm.tb3-headless-launch
+    - component:teknoir/ghcr.io.teknoir.ros-helm.nviros-humanoid-example
+  registry: teknoir.github.io/ros-helm
+  helmchart: ros
+  versions:
+    - 0.0.0-dds-beta.6
+
+# Dummy - remove this when image provider is ready
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: ROS2 Image
+  name: ghcr.io.teknoir.ros-helm.ros2
+  namespace: teknoir
+  description: The ROS2 Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/ros2.Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/ros2
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: Kitti Bag Image
+  name: ghcr.io.teknoir.ros-helm.kitti-bag
+  namespace: teknoir
+  description: The Kitti Bag Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/bags/kitti-bag/Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/kitti-bag
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: Zenoh Router Image
+  name: ghcr.io.teknoir.ros-helm.zenoh-router
+  namespace: teknoir
+  description: The Zenoh Router Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  repository: ghcr.io/teknoir/ros-helm/zenoh-router
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: NVIROS Image
+  name: ghcr.io.teknoir.ros-helm.nviros
+  namespace: teknoir
+  description: The NVIROS Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/nviros.Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/nviros
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: Discovery Image
+  name: ghcr.io.teknoir.ros-helm.discovery
+  namespace: teknoir
+  description: The Discovery Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/discovery.Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/discovery
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: TB3 Headless Launch Image
+  name: ghcr.io.teknoir.ros-helm.tb3-headless-launch
+  namespace: teknoir
+  description: The TB3 Headless Launch Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/src/tb3_headless_launch/Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/tb3-headless-launch
+  versions:
+    - beta
+    - latest
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  title: NVIROS Humanoid Example Image
+  name: ghcr.io.teknoir.ros-helm.nviros-humanoid-example
+  namespace: teknoir
+  description: The NVIROS Humanoid Example Image
+  annotations:
+    'github.com/project-slug': teknoir/ros-helm
+    'backstage.io/techdocs-ref': dir:.
+spec:
+  type: image
+  owner: group:teknoir/public
+  system: system:teknoir/core
+  lifecycle: experimental
+  dockerfile: docker/src/nviros-humanoid-example/Dockerfile
+  repository: ghcr.io/teknoir/ros-helm/nviros-humanoid-example
+  versions:
+    - beta
+    - latest
