@@ -8,7 +8,7 @@ metadata:
   description: The Robot Operating System (ROS2)
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/ros2-app
 spec:
   type: app
   owner: group:teknoir/public
@@ -36,6 +36,7 @@ metadata:
     'github.com/project-slug': teknoir/ros-helm
     'teknoir.org/helm-registry': teknoir.github.io/ros-helm
     'teknoir.org/helmchart': ros
+    'backstage.io/techdocs-ref': dir:docs/ros2-helm
 spec:
   type: helmchart
   owner: group:teknoir/public
@@ -65,7 +66,7 @@ metadata:
   description: The ROS2 Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/ros2
 spec:
   type: image
   owner: group:teknoir/public
@@ -87,7 +88,7 @@ metadata:
   description: The Kitti Bag Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/kitti-bag
 spec:
   type: image
   owner: group:teknoir/public
@@ -109,7 +110,7 @@ metadata:
   description: The Zenoh Router Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/zenoh-router
 spec:
   type: image
   owner: group:teknoir/public
@@ -130,7 +131,7 @@ metadata:
   description: The NVIROS Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/nviros
 spec:
   type: image
   owner: group:teknoir/public
@@ -152,7 +153,7 @@ metadata:
   description: The Discovery Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/discovery
 spec:
   type: image
   owner: group:teknoir/public
@@ -174,7 +175,7 @@ metadata:
   description: The TB3 Headless Launch Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/tb3-headless-launch
 spec:
   type: image
   owner: group:teknoir/public
@@ -196,7 +197,7 @@ metadata:
   description: The NVIROS Humanoid Example Image
   annotations:
     'github.com/project-slug': teknoir/ros-helm
-    'backstage.io/techdocs-ref': dir:.
+    'backstage.io/techdocs-ref': dir:docs/nviros-humanoid-example
 spec:
   type: image
   owner: group:teknoir/public

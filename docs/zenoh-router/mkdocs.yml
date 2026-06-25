@@ -1,0 +1,5 @@
+site_name: Zenoh Router Image
+nav:
+  - Overview: index.md
+plugins:
+  - techdocs-core

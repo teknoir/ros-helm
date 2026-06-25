@@ -1,0 +1,5 @@
+site_name: Discovery Image
+nav:
+  - Overview: index.md
+plugins:
+  - techdocs-core

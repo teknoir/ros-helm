@@ -1,0 +1,5 @@
+site_name: TB3 Headless Launch Image
+nav:
+  - Overview: index.md
+plugins:
+  - techdocs-core
