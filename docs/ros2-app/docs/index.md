@@ -17,6 +17,6 @@ In short:
    `repo: https://teknoir.github.io/ros-helm`, `chart: ros`.
 3. Keep `valuesContent` minimal — only override image tags, node placement, and the
    instances/commands for your use case.
-4. Visualize ROS data with Foxglove over `tnctl port-forward <device-name> 8765:31765`.
+4. Visualize ROS data with Foxglove over `tnctl port-forward <device-name> 8765:<service-id>`; add the Foxglove port (31765) as a service on the device's Tunneling tab first.
 
 Reference: Teknoir Workshop 2 — Software Management and Helm Deployment Workflows.

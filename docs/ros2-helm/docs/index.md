@@ -43,6 +43,6 @@ spec:
 
 Add more `instances` (with `commands` and optional `artifacts`) for your robot use case.
 Switching from one `ros` HelmChart to another cleans up the previous release and rolls out the
-new one. Visualize topics with Foxglove via `tnctl port-forward <device-name> 8765:31765`.
+new one. Visualize topics with Foxglove via `tnctl port-forward <device-name> 8765:<service-id>`; add the Foxglove port (31765) as a service on the device's Tunneling tab first.
 
 Reference: Teknoir Workshop 2 — Software Management and Helm Deployment Workflows.
