@@ -1,0 +1,96 @@
+# Generated from charts/ci/files/repos/ros-helm.yaml on 2026-11-23 by plans/cicd/migrate/gen_callers.py
+# Edit freely afterwards; re-running the generator overwrites this file.
+name: image
+
+# Public image: ghcr.io/teknoir/<image>:sha-<8>, plus :<tag> for a v* tag on
+# main, built on a hosted runner.
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: image-${{ github.sha }}
+  cancel-in-progress: false
+
+permissions: {}
+
+jobs:
+  image-ros-helm-kitti-bag:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/kitti-bag
+      context: docker/bags/kitti-bag
+      file: docker/bags/kitti-bag/Dockerfile
+      platforms: linux/amd64,linux/arm64/v8
+      visibility: public
+      runs-on: ubuntu-latest
+      timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+  image-ros-helm-nviros-humanoid-example:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/nviros-humanoid-example
+      context: docker/src/nviros-humanoid-example
+      file: docker/src/nviros-humanoid-example/Dockerfile
+      platforms: linux/amd64,linux/arm64/v8
+      visibility: public
+      runs-on: ubuntu-latest
+      timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+  image-ros-helm-tb3-headless-launch:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/tb3-headless-launch
+      context: docker/src/tb3_headless_launch
+      file: docker/src/tb3_headless_launch/Dockerfile
+      platforms: linux/amd64,linux/arm64/v8
+      visibility: public
+      runs-on: ubuntu-latest
+      timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+  image-ros-helm-nviros:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/nviros
+      context: docker
+      file: docker/nviros.Dockerfile
+      visibility: public
+      runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+  image-ros-helm-ros2:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/ros2
+      context: docker
+      file: docker/ros2.Dockerfile
+      platforms: linux/amd64,linux/arm64/v8
+      visibility: public
+      runs-on: ubuntu-latest
+      timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
+  image-ros-helm-discovery:
+    uses: teknoir/ci-workflows/.github/workflows/image.yml@main
+    with:
+      image: ros-helm/discovery
+      context: docker
+      file: docker/discovery.Dockerfile
+      platforms: linux/amd64,linux/arm64/v8
+      visibility: public
+      runs-on: ubuntu-latest
+      timeout-minutes: 90
+    permissions:
+      contents: read
+      packages: write
