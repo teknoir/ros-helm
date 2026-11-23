@@ -8,7 +8,7 @@ RUN unzip 2011_09_26_drive_0002_sync.zip
 RUN unzip 2011_09_26_calib.zip
 RUN /kitti2bag/docker_entrypoint.sh -t 2011_09_26 -r 0002 raw_synced .
 
-FROM python:3.9-slim AS kitti_bag_final
+FROM python:3.15-slim AS kitti_bag_final
 
 WORKDIR /data
 COPY --from=kitti2bag /data /data
